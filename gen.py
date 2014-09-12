@@ -53,7 +53,22 @@ def lerp_name(p1, p2):
     return lerp_format.format(p1=p1, p2=p2)
 
 ###############################################################################
-########################## Generation logic functions #########################
+###################### Code generation datastructurese ########################
+###############################################################################
+
+class Lerp:
+    def __init__(self, lerp_name, code):
+        self.lerp_name = lerp_name
+        self.code = code
+
+    def __str__(self):
+        return self.code
+
+    def __repr__(self):
+        return self.lerp_name
+
+###############################################################################
+######################## Generation logic functions ###########################
 ###############################################################################
 def generate_verts():
     emit_code("switch(state) {", 1)
@@ -64,12 +79,39 @@ def generate_verts():
         if count == 1:
             corner = points[i]
             x, y, z = corner
-            emit_vertex(0.5, corner[1], corner[2])
-            emit_vertex(corner[0], 0.5, corner[2])
-            emit_vertex(corner[0], corner[1], 0.5)
+            lerp_pairs = get_2sym_lerps_from_point(i)
+            lerp_code = {}
+            for k in lerp_pairs:
+                pair = lerp_pairs[k]
+                lerp_code[k] = lerps[pair[0]][pair[1]]
+            emit_vertex(lerp_code['yz'].lerp_name, corner[1], corner[2])
+            emit_vertex(corner[0], lerp_code['xz'].lerp_name, corner[2])
+            emit_vertex(corner[0], corner[1], lerp_code['yz'].lerp_name)
         emit_code("break;", -1)
 
     emit_code("}", -1, True)
+
+def get_lerp_pairs(p1, p2):
+    same = ""
+    if p1[0] == p2[0]:
+        same += "x"
+    if p1[1] == p2[1]:
+        same += "y"
+    if p1[2] == p2[2]:
+        same += "z"
+    return reverse_pairs[same]
+
+def get_2sym_lerps_from_point(p):
+    """ Get the lerps that have 2 coords similar """
+    two_syms = ['xy', 'yz', 'xz']
+    solutions = {}
+    for sym in two_syms:
+        pairs = reverse_pairs[sym]
+        for pair in pairs:
+            if p in pair and pair[0] < pair[1]:
+                solutions[sym] = pair
+    return solutions
+
 
 def generate_lerps():
     global lerps
@@ -84,11 +126,13 @@ def generate_lerps():
             if pair[1] not in lerps[pair[0]]:
                 pl_1 = points[pair[0]]
                 pl_2 = points[pair[1]]
-                code = "float {lerp_name} = inverse_lerp({low}, {high}, {goal});".format(lerp_name=lerp_name(get_point(*pl_1), get_point(*pl_2)),
+                name = lerp_name(get_point(*pl_1), get_point(*pl_2))
+                code = "float {lerp_name} = inverse_lerp({low}, {high}, {goal});".format(lerp_name=name,
                                                                                          low  = offset_get(*pl_1),
                                                                                          high = offset_get(*pl_2),
                                                                                          goal = goal_var)
-                lerps[pair[0]][pair[1]] = code
+                emit_code(code)
+                lerps[pair[0]][pair[1]] = Lerp(name, code)
 
 lerps = {}
 
