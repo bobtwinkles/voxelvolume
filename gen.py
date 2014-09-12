@@ -10,7 +10,11 @@ y_base = "y"
 z_base = "z"
 point_format = "x{0}y{1}z{2}"
 lerp_format  = "lerp_{p1}_{p2}"
+indent_level = 0
 
+###############################################################################
+###################### General-purpose util functions##########################
+###############################################################################
 def count_bits(n):
     m = 0
     while n != 0:
@@ -18,6 +22,9 @@ def count_bits(n):
         n >>= 1
     return m
 
+###############################################################################
+####################### Code Emmission functions ##############################
+###############################################################################
 def emit_code(s, increment_level=0, increment_first=False):
     global indent_level
     if increment_first:
@@ -27,8 +34,13 @@ def emit_code(s, increment_level=0, increment_first=False):
         indent_level += increment_level
 
 def emit_vertex(x, y, z):
-    emit_code("glVertex3f(x + {x}, y + {y}, x + {z});".format(x = x, y = y, z = z) )
+    emit_code("glVertex3f({x}, {y}, {z});".format(x=x_base + " + " + str(x)
+                                                 ,y=y_base + " + " + str(y)
+                                                 ,z=z_base + " + " + str(z)) )
 
+###############################################################################
+######################### Variable rendering functions#########################
+###############################################################################
 def get_point(x, y, z):
     return point_format.format(*(x, y, z))
 
@@ -40,6 +52,9 @@ def offset_get(ox, oy, oz):
 def lerp_name(p1, p2):
     return lerp_format.format(p1=p1, p2=p2)
 
+###############################################################################
+########################## Generation logic functions #########################
+###############################################################################
 def generate_verts():
     emit_code("switch(state) {", 1)
 
@@ -61,7 +76,6 @@ def generate_lerps():
     for p in reverse_pairs:
         if len(p) != 2:
             continue
-        print(p, reverse_pairs[p])
         for pair in reverse_pairs[p]:
             if pair[0] > pair[1]:
                 pair = pair[1], pair[0]
@@ -75,18 +89,17 @@ def generate_lerps():
                                                                                          high = offset_get(*pl_2),
                                                                                          goal = goal_var)
                 lerps[pair[0]][pair[1]] = code
-    print(json.dumps(lerps, indent=2))
 
 lerps = {}
 
-points = {1  : (0, 0, 0),       # b00000001
-          2  : (1, 0, 0),       # b00000010
-          4  : (0, 1, 0),       # b00000100
-          8  : (1, 1, 0),       # b00001000
-          16 : (0, 0, 1),       # b00010000
-          32 : (1, 0, 1),       # b00100000
-          64 : (0, 1, 1),       # b01000000
-          128: (1, 1, 1)}       # b10000000
+points = {1  : (0, 0, 0),  # b00000001
+          2  : (1, 0, 0),  # b00000010
+          4  : (0, 1, 0),  # b00000100
+          8  : (1, 1, 0),  # b00001000
+          16 : (0, 0, 1),  # b00010000
+          32 : (1, 0, 1),  # b00100000
+          64 : (0, 1, 1),  # b01000000
+          128: (1, 1, 1)}  # b10000000
 
 pairs = {}
 reverse_pairs = {}
@@ -115,7 +128,5 @@ for i in range(0, 8):
         reverse_pairs[same].add((p2i, p1i))
         reverse_pairs[same].add((p1i, p2i))
 
-print(json.dumps(pairs, indent=4))
-
 generate_lerps()
-#generate_verts()
+generate_verts()
