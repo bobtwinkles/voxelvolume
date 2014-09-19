@@ -54,8 +54,6 @@ void gl_init() {
 
 void display(void) {
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-  std::cout << "hi" << std::endl;
-
   glutSwapBuffers();
 }
 

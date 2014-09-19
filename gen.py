@@ -70,23 +70,52 @@ class Lerp:
 ###############################################################################
 ######################## Generation logic functions ###########################
 ###############################################################################
+def generate_tetrahedron(p1, p2, p3):
+    p1p = points[p1]
+    p2p = points[p2]
+    p3p = points[p3]
+
 def generate_verts():
     emit_code("switch(state) {", 1)
 
     for i in range(0, 256):
         count = count_bits(i)
         emit_code("case {i}:".format(i=i), 1)
-        if count == 1:
-            corner = points[i]
+        lerp_code = {}
+        dupe_set = set({})
+        lerp_set = set({})
+        for j in range(0, 8):
+            if i & (1 << j) == 0:
+                continue
+            corner = points[1 << j]
             x, y, z = corner
-            lerp_pairs = get_2sym_lerps_from_point(i)
-            lerp_code = {}
-            for k in lerp_pairs:
-                pair = lerp_pairs[k]
-                lerp_code[k] = lerps[pair[0]][pair[1]]
-            emit_vertex(lerp_code['yz'].lerp_name, corner[1], corner[2])
-            emit_vertex(corner[0], lerp_code['xz'].lerp_name, corner[2])
-            emit_vertex(corner[0], corner[1], lerp_code['yz'].lerp_name)
+            lerp_pairs = get_2sym_lerps_from_point(1 << j)
+            for pair in lerp_pairs.values():
+                if pair in lerp_set:
+                    dupe_set.add(pair)
+                    lerp_set.remove(pair)
+                if pair in dupe_set:
+                    continue
+                lerp_set.add(pair)
+        print(lerp_set)
+        for pair in lerp_set:
+            p1, p2 = points[pair[0]], points[pair[1]]
+            x = y = z = 0
+            if p1[0] == p2[0]:
+                x = p1[0]
+            else:
+                x = lerps[pair[0]][pair[1]].lerp_name
+
+            if p1[1] == p2[1]:
+                y = p1[1]
+            else:
+                y = lerps[pair[0]][pair[1]].lerp_name
+
+            if p1[2] == p2[2]:
+                z = p1[2]
+            else:
+                z = lerps[pair[0]][pair[1]].lerp_name
+            emit_vertex(x, y, z)
         emit_code("break;", -1)
 
     emit_code("}", -1, True)
@@ -103,7 +132,7 @@ def get_lerp_pairs(p1, p2):
 
 def get_2sym_lerps_from_point(p):
     """ Get the lerps that have 2 coords similar """
-    two_syms = ['xy', 'yz', 'xz']
+    two_syms = ['xy', 'xz', 'yz']
     solutions = {}
     for sym in two_syms:
         pairs = reverse_pairs[sym]

@@ -13,7 +13,7 @@ find_package(OpenGL REQUIRED)
 
 include_directories(SYSTEM ${GLUT_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
 
-add_executable(main Main.cpp DataStore.cpp)
+add_executable(main Main.cpp DataStore.cpp RenderChunk.cpp)
 add_executable(data_render DataRender.cpp DataStore.cpp)
 
 target_link_libraries(main ${GLUT_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
