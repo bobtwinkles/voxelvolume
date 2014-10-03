@@ -4,6 +4,7 @@
 #include <string>
 
 #include "Util.hpp"
+#include "Vec3.hpp"
 
 namespace srp {
   class DataStore {
@@ -16,6 +17,7 @@ namespace srp {
       ~DataStore();
 
       unsigned int GetPoint(int X, int Y, int Z);
+      unsigned int GetPoint(Vec3i & Point);
 
       inline unsigned int GetWidth() { return this->_width; }
       inline unsigned int GetHeight() { return this->_height; }

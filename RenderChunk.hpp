@@ -3,16 +3,21 @@
 
 #include "DataStore.hpp"
 #include "RenderConfig.hpp"
+#include "Tetrahedron.hpp"
 #include "Util.hpp"
 
-#define RENDER_CHUNK_SIZE 16
+#include <vector>
 
 namespace srp {
   class RenderChunk {
     private:
+      typedef std::vector<srp::Tetrahedron> TetrahedronList;
+
       srp::DataStore & _ds;
 
       int _x, _y, _z;
+
+      std::vector<srp::Tetrahedron> _tetrahedrons;
 
       DISALLOW_COPY_AND_ASSIGN(RenderChunk);
     public:

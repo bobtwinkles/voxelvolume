@@ -38,6 +38,9 @@ DataStore::DataStore(std::string Folder) {
 
   _dstore = new unsigned int[w * h * d];
 
+  unsigned int min = 0xFFFFFFFF;
+  unsigned int max = 0;
+
   for (int i = 0; i < this->_depth; ++i) {
     snprintf(buff, BUFF_SIZE, files_base.c_str(), i + 1);
     std::ifstream data(buff, std::ifstream::binary);
@@ -50,9 +53,12 @@ DataStore::DataStore(std::string Folder) {
         data.read((char*)&val, 2);
         val = ((val & 0xFF) << 8) | ((val >> 8) & 0xFF);
         _dstore[x + y * this->_width + i * this->_width * this->_height] = val;
+        if (val < min) {min = val;}
+        if (val > max) {max = val;}
       }
     }
   }
+  std::cout << "min: " << min << " max: " << max << std::endl;
 }
 
 DataStore::~DataStore() {
@@ -61,4 +67,8 @@ DataStore::~DataStore() {
 
 unsigned int DataStore::GetPoint(int X, int Y, int Z) {
   return _dstore[X + Y * this->_width + Z * this->_width * this->_height];
+}
+
+unsigned int DataStore::GetPoint(srp::Vec3<int> & Point) {
+  return this->GetPoint(Point.GetX(), Point.GetY(), Point.GetZ());
 }

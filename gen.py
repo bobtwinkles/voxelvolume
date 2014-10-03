@@ -1,4 +1,4 @@
-# So we need to generate 256 different cubes, which is not my idea of "fun" so... python time!
+# So we need to use 64 different cubes, which is not my idea of "fun" so... python time!
 # source: http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=611EC2E9830C52108DB5D9AB4B76B776?doi=10.1.1.56.7139&rep=rep1&type=pdf
 import json
 
@@ -66,6 +66,19 @@ class Lerp:
 
     def __repr__(self):
         return self.lerp_name
+
+class Tetrahedron:
+    def __init__(self, p1, p2, p3, p4):
+        self.p1 = p1
+        self.p2 = p2
+        self.p3 = p3
+        self.p4 = p4
+
+    def render(self, i):
+        p1s = bool(i & self.p1)
+        p2s = bool(i & self.p2)
+        p3s = bool(i & self.p3)
+        p4s = bool(i & self.p4)
 
 ###############################################################################
 ######################## Generation logic functions ###########################

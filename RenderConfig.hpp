@@ -5,6 +5,8 @@
 
 // Global renderer state
 
+#define RENDER_CHUNK_SIZE 32
+
 namespace srp {
   class RenderState {
     private:

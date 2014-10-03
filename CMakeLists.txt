@@ -5,7 +5,7 @@ project(srp)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
-list(APPEND CMAKE_CXX_DEBUG_FLAGS "-g")
+list(APPEND CMAKE_CXX_DEBUG_FLAGS "-g -Wall -Werror -v")
 
 find_package(GLUT REQUIRED)
 find_package(GLEW REQUIRED)
@@ -13,7 +13,13 @@ find_package(OpenGL REQUIRED)
 
 include_directories(SYSTEM ${GLUT_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
 
-add_executable(main Main.cpp DataStore.cpp RenderChunk.cpp)
+set (SRCS Main.cpp
+          DataStore.cpp
+          RenderChunk.cpp
+          Tetrahedron.cpp
+          )
+
+add_executable(main ${SRCS})
 add_executable(data_render DataRender.cpp DataStore.cpp)
 
 target_link_libraries(main ${GLUT_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
