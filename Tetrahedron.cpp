@@ -96,7 +96,7 @@ void Tetrahedron::Render(DataStore & DS, RenderState & State) {
   glColor3f(_corners[0].GetX()/(float)RENDER_CHUNK_SIZE,
             _corners[0].GetY()/(float)RENDER_CHUNK_SIZE,
             _corners[0].GetZ()/(float)RENDER_CHUNK_SIZE);
-  glColor3f(TRI_COLORS[tri][0], TRI_COLORS[tri][1], TRI_COLORS[tri][2]);
+  //glColor3f(TRI_COLORS[tri][0], TRI_COLORS[tri][1], TRI_COLORS[tri][2]);
   //glColor3f(EDGE_COLORS[_index][0], EDGE_COLORS[_index][1], EDGE_COLORS[_index][2]);
   for (int i = 0; i < 6; ++i) {
     int edge = TRIANGLE_MAP[tri][i];
@@ -116,6 +116,9 @@ void Tetrahedron::Render(DataStore & DS, RenderState & State) {
     }
     Vec3f point = edges[edge];
 //    glColor3f(EDGE_COLORS[edge][0], EDGE_COLORS[edge][1], EDGE_COLORS[edge][2]);
+    glColor3f(point.GetX() / 256.f
+             ,point.GetY() / 256.f
+             ,point.GetZ() / 256.f);
     glVertex3f(point.GetX(), point.GetY(), point.GetZ());
   }
 }

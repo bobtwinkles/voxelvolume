@@ -7,6 +7,8 @@
 #include "Util.hpp"
 
 #include <vector>
+#include <GL/glew.h>
+#include <GL/gl.h>
 
 namespace srp {
   class RenderChunk {
@@ -21,7 +23,7 @@ namespace srp {
 
       DISALLOW_COPY_AND_ASSIGN(RenderChunk);
     public:
-      // X, Y, and Z are in absolute coordinates
+      // X, Y, and Z are in chunk coordinates
       RenderChunk(srp::DataStore & store, int X, int Y, int Z);
       ~RenderChunk();
 

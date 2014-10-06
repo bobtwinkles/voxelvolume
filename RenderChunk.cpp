@@ -31,6 +31,7 @@ RenderChunk::~RenderChunk() {
 
 void RenderChunk::Render(srp::RenderState & state) {
   TetrahedronList::iterator it = this->_tetrahedrons.begin();
+
   while (it != this->_tetrahedrons.end()) {
     Tetrahedron tet = *(it++);
     unsigned char point_state = tet.GetState(this->_ds, state.GetThreshold());

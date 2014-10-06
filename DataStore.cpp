@@ -66,6 +66,15 @@ DataStore::~DataStore() {
 }
 
 unsigned int DataStore::GetPoint(int X, int Y, int Z) {
+  if (X < 0 || X >= this->_width) {
+    return 0;
+  }
+  if (Y < 0 || Y >= this->_height) {
+    return 0;
+  }
+  if (Z < 0 || Z >= this->_depth) {
+    return 0;
+  }
   return _dstore[X + Y * this->_width + Z * this->_width * this->_height];
 }
 
