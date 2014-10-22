@@ -85,7 +85,7 @@ void display(void) {
 
   glPushMatrix();
   glRotatef(frame, 0, 1, 0);
-  glTranslatef(-(dstore->GetWidth() / 2.f), 0, -(dstore->GetHeight() / 2.f));
+  glTranslatef(-(dstore->GetWidth() / 2.f), 0, -(dstore->GetDepth() / 2.f));
 
   // AXIS RENDER
   glBegin(GL_LINES);
@@ -102,8 +102,8 @@ void display(void) {
   glVertex3f(0, 0, dstore->GetDepth());
 
   glColor3f(1, 1, 0);
-  glVertex3f(dstore->GetWidth() / 2.f, 0, dstore->GetHeight() / 2.f);
-  glVertex3f(dstore->GetWidth() / 2.f, dstore->GetHeight(), dstore->GetHeight() / 2.f);
+  glVertex3f(dstore->GetWidth() / 2.f, 0, dstore->GetDepth() / 2.f);
+  glVertex3f(dstore->GetWidth() / 2.f, dstore->GetHeight(), dstore->GetDepth() / 2.f);
 
   glEnd();
 
@@ -156,9 +156,9 @@ void resize(int w, int h) {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
-  gluPerspective(90, w / (float)h, 0.1, 10000);
+  gluPerspective(40, w / (float)h, 0.1, 10000);
 
-  set_camera_pos_and_dir(srp::Vec3f(200, 200, 200), (srp::Vec3f(1, 1, 1)).NormalizeSelf());
+  set_camera_pos_and_dir(srp::Vec3f(256, 256, 256), (srp::Vec3f(1, 1, 1)).NormalizeSelf());
   glMatrixMode(GL_MODELVIEW);
 }
 
