@@ -19,7 +19,12 @@ namespace srp {
 
       int _x, _y, _z;
 
+      GLuint _vertex_buffer;
+      GLuint _index_buffer;
+
       std::vector<srp::Tetrahedron> _tetrahedrons;
+
+      srp::RenderState _last_state;
 
       DISALLOW_COPY_AND_ASSIGN(RenderChunk);
     public:
@@ -27,6 +32,7 @@ namespace srp {
       RenderChunk(srp::DataStore & store, int X, int Y, int Z);
       ~RenderChunk();
 
+      void Update(srp::RenderState & State);
       void Render(srp::RenderState & State);
   };
 }

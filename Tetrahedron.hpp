@@ -4,8 +4,13 @@
 #include "Vec3.hpp"
 #include "DataStore.hpp"
 #include "RenderConfig.hpp"
+#include "RenderTypes.hpp"
+
+#include <GL/glew.h>
+#include <vector>
 
 namespace srp {
+
   class Tetrahedron {
     private:
       Vec3i _corners[4];
@@ -15,7 +20,7 @@ namespace srp {
     public:
       Tetrahedron(Vec3i P1, Vec3i P2, Vec3i P3, Vec3i P4);
 
-      void Render(srp::DataStore & ds, RenderState & State);
+      void Render(srp::DataStore & ds, RenderState & State, std::vector<GLuint> &, srp::IndexCache &, std::vector<srp::Vertex>);
 
       /// Returns the set of points which are above the threshold
       ///

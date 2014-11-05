@@ -9,7 +9,7 @@ namespace srp {
     double operator() (T t) { return sqrt(t); }
   };
 
-  template<typename T, typename SqrtRet = double, typename SqrtOp = StdSqrtOp<T>>
+  template<typename T, typename SqrtRet = double, typename SqrtOp = StdSqrtOp<T> >
   class Vec3 {
     private:
       T _x, _y, _z;
@@ -67,8 +67,10 @@ namespace srp {
   };
 
   typedef Vec3<int> Vec3i;
-  typedef Vec3<float, float> Vec3f;
+  typedef Vec3<float> Vec3f;
   typedef Vec3<double> Vec3d;
 }
+
+#include "Vec3f.hpp"
 
 #endif

@@ -1,6 +1,7 @@
 #include "Tetrahedron.hpp"
 
 #include "RenderConfig.hpp"
+#include "Vec3f.hpp"
 
 #include <GL/glew.h>
 #include <GL/gl.h>
@@ -88,7 +89,11 @@ static float inverse_lerp_factor(unsigned int A, unsigned int B, unsigned int Va
   return tr;
 }
 
-void Tetrahedron::Render(DataStore & DS, RenderState & State) {
+void Tetrahedron::Render(DataStore & DS,
+                         RenderState & State,
+                         std::vector<GLuint> & Indicies,
+                         srp::IndexCache & Cache,
+                         std::vector<srp::Vertex> VertexData) {
   Vec3f edges[6];
   bool edges_seen[6] = {false, false, false, false, false, false};
   unsigned char tri = GetState(DS, State.GetThreshold());
@@ -113,6 +118,21 @@ void Tetrahedron::Render(DataStore & DS, RenderState & State) {
                          ,fac * a.GetY() + (1 - fac) * b.GetY()
                          ,fac * a.GetZ() + (1 - fac) * b.GetZ());
       edges_seen[edge] = true;
+
+      if (Cache.at(edges[edge]) == -1) {
+        Vertex v;
+        GLuint creation_index = 0;
+        v.x = edges[edge].GetX(); v.y = edges[edge].GetY(); v.z = edges[edge].GetZ();
+        v.nx = v.ny = v.nz = 0;
+        v.r = v.x / 256.f;
+        v.g = v.y / 256.f;
+        v.b = v.z / 256.f;
+        v.u = 0;
+        v.v = 0;
+        creation_index = VertexData.size();
+        Cache.insert(std::make_pair(edges[edge], creation_index));
+        VertexData.push_back(v);
+      }
     }
     Vec3f point = edges[edge];
 //    glColor3f(EDGE_COLORS[edge][0], EDGE_COLORS[edge][1], EDGE_COLORS[edge][2]);
