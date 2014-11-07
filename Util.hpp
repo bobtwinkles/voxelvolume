@@ -12,4 +12,8 @@
 // Dereferences a random (invalid) pointer
 #define BUG() *((int*)0x01) = 0
 
+namespace srp {
+  long GetMemoryUsage();
+}
+
 #endif

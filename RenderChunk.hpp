@@ -26,6 +26,8 @@ namespace srp {
 
       srp::RenderState _last_state;
 
+      void _UpdateBuffers(std::vector<srp::Vertex> &, std::vector<GLuint> &);
+
       DISALLOW_COPY_AND_ASSIGN(RenderChunk);
     public:
       // X, Y, and Z are in chunk coordinates

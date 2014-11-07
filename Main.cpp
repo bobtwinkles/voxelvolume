@@ -4,6 +4,7 @@
 #include <GL/glx.h>
 #include <stdlib.h>
 #include <string>
+#include <time.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -79,10 +80,28 @@ void process_events() {
 }
 
 void main_loop() {
+  struct timespec ptime;
+  struct timespec ctime;
+  struct timespec diff;
+  clock_gettime(CLOCK_MONOTONIC_COARSE, &ctime);
   while (running) {
+    clock_gettime(CLOCK_MONOTONIC_COARSE, &ptime);
     reshape_window();
     process_events();
     display_func();
+    clock_gettime(CLOCK_MONOTONIC_COARSE, &ctime);
+    diff.tv_sec  = ctime.tv_sec - ptime.tv_sec;
+    diff.tv_nsec = ctime.tv_nsec - ptime.tv_nsec;
+    long sleeptime = 16666666l - ( diff.tv_sec * 1000000000l + diff.tv_nsec );
+    diff.tv_sec  = 0;
+    diff.tv_nsec = sleeptime;
+    while (diff.tv_nsec > 0) {
+      struct timespec rem;
+      std::cout << "sleeping for " << rem.tv_nsec << "." << rem.tv_sec << std::endl;
+      nanosleep(&diff, &rem);
+      diff.tv_sec  = rem.tv_sec;
+      diff.tv_nsec = rem.tv_nsec;
+    }
   }
 }
 
@@ -134,12 +153,9 @@ void display_func(void) {
   glEnd();
 
   // DATA RENDER
-  glBegin(GL_TRIANGLES);
+  glEnable(GL_VERTEX_ARRAY);
 
-  glColor3f(1, 1, 1);
   chunk->Render(state);
-
-  glEnd();
 
   // PANEL RENDER
   glEnable(GL_TEXTURE_2D);

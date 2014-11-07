@@ -2,6 +2,7 @@
 
 #include "RenderConfig.hpp"
 #include "Vec3f.hpp"
+#include "Util.hpp"
 
 #include <GL/glew.h>
 #include <GL/gl.h>
@@ -119,7 +120,7 @@ void Tetrahedron::Render(DataStore & DS,
                          ,fac * a.GetZ() + (1 - fac) * b.GetZ());
       edges_seen[edge] = true;
 
-      if (Cache.at(edges[edge]) == -1) {
+      if (Cache.find(edges[edge]) == Cache.end()) {
         Vertex v;
         GLuint creation_index = 0;
         v.x = edges[edge].GetX(); v.y = edges[edge].GetY(); v.z = edges[edge].GetZ();
@@ -134,12 +135,12 @@ void Tetrahedron::Render(DataStore & DS,
         VertexData.push_back(v);
       }
     }
-    Vec3f point = edges[edge];
+//    Vec3f point = edges[edge];
 //    glColor3f(EDGE_COLORS[edge][0], EDGE_COLORS[edge][1], EDGE_COLORS[edge][2]);
-    glColor3f(point.GetX() / 256.f
-             ,point.GetY() / 256.f
-             ,point.GetZ() / 256.f);
-    glVertex3f(point.GetX(), point.GetY(), point.GetZ());
+//    glColor3f(point.GetX() / 256.f
+//             ,point.GetY() / 256.f
+//             ,point.GetZ() / 256.f);
+//    glVertex3f(point.GetX(), point.GetY(), point.GetZ());
   }
 }
 
