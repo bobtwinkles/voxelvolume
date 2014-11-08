@@ -30,11 +30,12 @@ add_executable(main ${SRCS})
 target_link_libraries(main ${X11_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 
 include_directories("${CMAKE_SOURCE_DIR}/" "${CMAKE_SOURCE_DIR}/ogl")
-if(${GLUT_FOUND})
+
+if(GLUT_FOUND)
   include_directories(SYSTEM ${GLUT_INCLUDE_DIRS})
   add_executable(data_render DataRender.cpp DataStore.cpp)
   target_link_libraries(data_render ${GLUT_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
-endif(${GLUT_FOUND})
+endif(GLUT_FOUND)
 
 install(DIRECTORY data DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 install(DIRECTORY shaders DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
