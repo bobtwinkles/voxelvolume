@@ -22,11 +22,11 @@ RenderChunk::RenderChunk(srp::DataStore & ds, int X, int Y, int Z) : _ds(ds), _x
     }
   }
 
-  GLuint buffers[2];
-  glGenBuffers(2, buffers);
+  GLuint buffs[2];
+  glGenBuffers(2, buffs);
 
-  this->_vertex_buffer = buffers[0];
-  this->_index_buffer = buffers[1];
+  this->_vertex_buffer = buffs[0];
+  this->_index_buffer = buffs[1];
 }
 
 RenderChunk::~RenderChunk() {
