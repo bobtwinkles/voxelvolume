@@ -13,7 +13,7 @@
 #define FLOAT_NEAR_EQ(a, b, epsilon) ( ABS((a) - (b)) < epsilon)
 
 // Dereferences a random (invalid) pointer
-#define BUG() { std::cerr << __FILE__ << ":" << __LINE__ << ": bug =(" << std::endl; *((int*)0x01) = 0; }
+#define BUG() { std::cerr << __FILE__ << ":" << std::dec << __LINE__ << ": bug =(" << std::endl; *((int*)0x01) = 0; }
 
 namespace srp {
   long GetMemoryUsage();
