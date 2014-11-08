@@ -47,7 +47,7 @@ namespace srp {
         void FreeSources();
 
         /// Returns *this to facilitate method chaining
-        Shader &  Compile();
+        Shader & Compile();
         inline bool IsCompilied() const { return _compiled; }
         inline GLuint GetShaderID() const { return _sid; }
     };
