@@ -55,6 +55,8 @@ int main(int argc, char ** argv) {
     exit(1);
   }
 
+  srp::InitializeBaseDirectory(argv[0]);
+
   dstore = new srp::DataStore(argv[1]);
 
   window = new srp::XWindow("SRP");
@@ -117,29 +119,13 @@ void gl_init() {
   std::shared_ptr<srp::ogl::Shader> vert(new srp::ogl::Shader(GL_VERTEX_SHADER));
   std::shared_ptr<srp::ogl::Shader> frag(new srp::ogl::Shader(GL_FRAGMENT_SHADER));
 
-  std::ifstream vert_source("shaders/base.vert");
-  std::ifstream frag_source("shaders/base.frag");
-
-  if (!vert_source) {
-    std::cerr << "Failed to load vertex shader" << std::endl;
-    BUG();
-  }
-
-  if (!frag_source) {
-    std::cerr << "Failed to load fragment shader" << std::endl;
-    BUG();
-  }
-
-  vert->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource(vert_source)));
-  std::cout << srp::GetMemoryUsage() << std::endl;
-  frag->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource(frag_source)));
+  vert->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource("base.vert")));
+  frag->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource("base.frag")));
 
   basic = new srp::ogl::ShaderProgram();
   basic->AddShader(vert);
   basic->AddShader(frag);
-  std::cout << "Linking program" << std::endl;
   basic->Link();
-  std::cout << "Program linked" << std::endl;
 
   glGenTextures(1, &tex);
   GLERR();

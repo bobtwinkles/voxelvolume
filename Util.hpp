@@ -2,6 +2,7 @@
 #define _UTIL_H_
 
 #include <iostream>
+#include <string>
 
 #define DISALLOW_COPY_AND_ASSIGN(t) \
   t(const t&); \
@@ -16,6 +17,9 @@
 
 namespace srp {
   long GetMemoryUsage();
+
+  void InitializeBaseDirectory(const char * Argv0);
+  std::string GetBaseDirectory();
 }
 
 #endif

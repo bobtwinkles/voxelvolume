@@ -1,6 +1,7 @@
 #include "Shader.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <fstream>
 
 #include "OGLUtil.hpp"
 
@@ -9,6 +10,7 @@ using srp::ogl::ShaderSource;
 using srp::ogl::ShaderProgram;
 
 static void ReadFullFile(std::istream & SourceStream, char ** OutString, int * OutLen);
+static void ReadFullFile(const char* FName, char ** OutString, int * OutLen);
 
 //////////////////////////////////////////
 //////////////////////////////////////////
@@ -20,6 +22,9 @@ ShaderSource::ShaderSource(std::istream & SourceStream) {
   ReadFullFile(SourceStream, &_data, &_len);
 }
 
+ShaderSource::ShaderSource(const char * FName) {
+  ReadFullFile(FName, &_data, &_len);
+}
 
 ShaderSource::~ShaderSource() {
   delete[] _data;
@@ -205,6 +210,18 @@ GLint ShaderProgram::FindUniform(const char * name) {
 /////////////// Utilities ////////////////
 //////////////////////////////////////////
 //////////////////////////////////////////
+
+static void ReadFullFile(const char * FName, GLchar ** OutBuf, GLint * OutLen) {
+  std::string base = srp::GetBaseDirectory();
+  base = base.append("shaders/");
+  base = base.append(FName);
+  std::ifstream stream(base.c_str());
+  if (!stream) {
+    std::cerr << "Failed to open shader " << base << ", aborting" << std::endl;
+    BUG();
+  }
+  ReadFullFile(stream, OutBuf, OutLen);
+}
 
 static void ReadFullFile(std::istream & SourceStream, GLchar ** OutBuf, GLint * OutLen) {
   SourceStream.seekg(0, SourceStream.end);

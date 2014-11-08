@@ -20,6 +20,7 @@ namespace srp {
         DISALLOW_COPY_AND_ASSIGN(ShaderSource);
       public:
         ShaderSource(std::istream & SourceStream);
+        ShaderSource(const char * fname);
         ~ShaderSource();
 
         GLchar * GetString() const { return _data; }
