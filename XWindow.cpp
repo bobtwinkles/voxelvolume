@@ -1,8 +1,11 @@
 #include<GL/glew.h>   // Must be first so that it is included before gl/glext.h
+
 #include "XWindow.hpp"
 
 #include<iostream>
 #include<unistd.h>
+
+#include "ogl/OGLUtil.hpp"
 
 using srp::XWindow;
 

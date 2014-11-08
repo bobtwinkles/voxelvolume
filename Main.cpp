@@ -11,6 +11,7 @@
 #include "RenderConfig.hpp"
 #include "RenderChunk.hpp"
 #include "Util.hpp"
+#include "ogl/OGLUtil.hpp"
 #include "Vec3.hpp"
 #include "XWindow.hpp"
 
@@ -100,8 +101,6 @@ void gl_init() {
   glEnable(GL_DEPTH_TEST);
   GLERR();
 //  glEnable(GL_CULL_FACE);
-  glEnable(GL_TEXTURE_2D);
-  GLERR();
 
   glGenTextures(1, &tex);
   GLERR();
@@ -112,8 +111,6 @@ void gl_init() {
   GLERR();
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-  GLERR();
-  glDisable(GL_TEXTURE_2D);
   GLERR();
 }
 

@@ -1,3 +1,5 @@
 -std=c++11
 -I /usr/include/GL
 -I /usr/include/GLUT
+-I ./ogl/
+-I ./
