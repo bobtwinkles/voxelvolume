@@ -6,21 +6,19 @@
 #include <string>
 #include <time.h>
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-
 #include "DataStore.hpp"
 #include "Tetrahedron.hpp"
 #include "RenderConfig.hpp"
 #include "RenderChunk.hpp"
+#include "Util.hpp"
 #include "Vec3.hpp"
-
-typedef GLXContext (*glXCreateContextAttribsARBProc)(Display*, GLXFBConfig, GLXContext, Bool, const int*);
+#include "XWindow.hpp"
 
 srp::DataStore * dstore;
 
 srp::RenderState state(2500);
 srp::RenderChunk * chunk;
+srp::XWindow * window;
 
 int frame;
 int panel_z;
@@ -28,23 +26,14 @@ GLuint tex;
 
 int last_width, last_height;
 
-static bool context_error;
-Display * display;
-Window win;
-Colormap cmap;
-GLXContext context;
-
 bool running;
 
-void create_window(void);
 void gl_init();
 void display_func(void);
-void print_error(void);
 void reshape_window(void);
 void resize(int w, int h);
 void main_loop(void);
 void set_camera_pos_and_dir(const srp::Vec3f & Pos, const srp::Vec3f & Dir);
-static int on_context_error( Display *display, XErrorEvent * event );
 static void set_texture_data(srp::DataStore & ds, int Z);
 
 int main(int argc, char ** argv) {
@@ -55,7 +44,7 @@ int main(int argc, char ** argv) {
 
   dstore = new srp::DataStore(argv[1]);
 
-  create_window();
+  window = new srp::XWindow("SRP");
 
   gl_init();
 
@@ -66,14 +55,11 @@ int main(int argc, char ** argv) {
   running = true;
   main_loop();
 
-  glXMakeCurrent( display, 0, 0 );
-  glXDestroyContext( display, context );
-  XDestroyWindow( display, win );
-  XFreeColormap( display, cmap );
-  XCloseDisplay( display );
+  std::cout << "cleaning up" << std::endl;
 
   delete chunk;
   delete dstore;
+  delete window;
 }
 
 void process_events() {
@@ -97,33 +83,43 @@ void main_loop() {
     diff.tv_nsec = sleeptime;
     while (diff.tv_nsec > 0) {
       struct timespec rem;
-      std::cout << "sleeping for " << rem.tv_nsec << "." << rem.tv_sec << std::endl;
-      nanosleep(&diff, &rem);
-      diff.tv_sec  = rem.tv_sec;
-      diff.tv_nsec = rem.tv_nsec;
+      int i = nanosleep(&diff, &rem);
+      if (i < 0) {
+        diff.tv_sec  = rem.tv_sec;
+        diff.tv_nsec = rem.tv_nsec;
+      } else {
+        break;
+      }
     }
   }
 }
 
 void gl_init() {
   glClearColor(0, 0, 0, 0);
-  glPointSize(3);
+//  glPointSize(3); // faile because it's OpenGL 1.0
   glEnable(GL_DEPTH_TEST);
-  glShadeModel(GL_SMOOTH);
+  GLERR();
 //  glEnable(GL_CULL_FACE);
   glEnable(GL_TEXTURE_2D);
+  GLERR();
 
   glGenTextures(1, &tex);
+  GLERR();
   glBindTexture(GL_TEXTURE_2D, tex);
+  GLERR();
 
   set_texture_data(*dstore, panel_z);
+  GLERR();
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+  GLERR();
   glDisable(GL_TEXTURE_2D);
+  GLERR();
 }
 
 void display_func(void) {
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+  GLERR();
 
   frame += 1;
   panel_z = 0.5 * ( sin(frame / float(100)) + 1)  * dstore->GetDepth();
@@ -153,9 +149,9 @@ void display_func(void) {
   glEnd();
 
   // DATA RENDER
-  glEnable(GL_VERTEX_ARRAY);
+  // glEnable(GL_VERTEX_ARRAY);
 
-  chunk->Render(state);
+  // chunk->Render(state);
 
   // PANEL RENDER
   glEnable(GL_TEXTURE_2D);
@@ -190,12 +186,14 @@ void display_func(void) {
   // buffer swap
   glPopMatrix();
 
-  glXSwapBuffers(display, win);
+  window->SwapBuffers();
+
+  GLERR();
 }
 
 void reshape_window(void) {
   XWindowAttributes wa;
-  XGetWindowAttributes(display, win, &wa);
+  window->GetAttributes(&wa);
 
   if (wa.width != last_width || wa.height != last_height) {
     resize(wa.width, wa.height);
@@ -238,147 +236,4 @@ static void set_texture_data(srp::DataStore & ds, int Z) {
   }
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ds.GetWidth(), ds.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-}
-
-void create_window(void) {
-  display = XOpenDisplay(NULL);
-
-  std::cerr << std::hex << display << " is the display" << std::endl;
-
-  if (!display) {
-    std::cerr << "Failed to open display" << std::endl;
-    exit(1);
-  }
-
-  static int visual_attribs[] = {
-      GLX_X_RENDERABLE  , True,
-      GLX_DRAWABLE_TYPE , GLX_WINDOW_BIT,
-      GLX_RENDER_TYPE   , GLX_RGBA_BIT,
-      GLX_X_VISUAL_TYPE , GLX_TRUE_COLOR,
-      GLX_RED_SIZE      , 8,
-      GLX_GREEN_SIZE    , 8,
-      GLX_BLUE_SIZE     , 8,
-      GLX_ALPHA_SIZE    , 8,
-      GLX_DEPTH_SIZE    , 24,
-      GLX_STENCIL_SIZE  , 8
-  };
-
-  int glx_major, glx_minor;
-
-  if (!glXQueryVersion( display, &glx_major, &glx_minor ) ) {
-    std::cerr << "failed to query X server for gl version" << std::endl;
-    exit(1);
-  }
-
-  if ( (glx_major == 1 && glx_minor < 3) || glx_major < 1) {
-    std::cerr << "GLX version " << glx_major << "." << glx_minor << " is insufficient" << std::endl;
-    exit(1);
-  }
-
-  int fbcount;
-  GLXFBConfig * fbc = glXChooseFBConfig(display, DefaultScreen(display), visual_attribs, &fbcount);
-  if (!fbc) {
-    std::cerr << "Failed to get a valid frame buffer configuratin" << std::endl;
-    exit(1);
-  }
-
-  int best_fbc_index = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 99999;
-
-  for (int i = 0; i < fbcount; ++i) {
-    int samp_buf, samples;
-    XVisualInfo * vi = glXGetVisualFromFBConfig( display, fbc[i] );
-    glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
-    glXGetFBConfigAttrib( display, fbc[i], GLX_SAMPLES       , &samples );
-
-    if ( best_fbc_index < 0 || ( samp_buf && samples ) > best_num_samp )
-      best_fbc_index = i, best_num_samp = samples;
-    if ( worst_fbc < 0 || !samp_buf || samples < worst_num_samp )
-      worst_fbc = i, worst_num_samp = samples;
-    XFree( vi );
-  }
-
-  GLXFBConfig best_fbc = fbc[best_fbc_index];
-
-  XFree(fbc);
-
-  XVisualInfo * vi = glXGetVisualFromFBConfig( display, best_fbc );
-  std::cout << "Chose FBC with vid 0x" << std::hex << vi->visualid << std::dec << std::endl;
-  XSetWindowAttributes swa;
-  swa.colormap = cmap = XCreateColormap( display,
-                                         RootWindow(display, vi->screen),
-                                         vi->visual, AllocNone );
-  swa.background_pixmap = None;
-  swa.border_pixel = 0;
-  swa.event_mask   = StructureNotifyMask;
-
-  win = XCreateWindow( display, RootWindow( display, vi->screen ),
-                              0, 0, 100, 100, 0, vi->depth, InputOutput,
-                              vi->visual,
-                              CWBorderPixel|CWColormap|CWEventMask, &swa);
-
-  if (!win) {
-    std::cerr << "Failed to create window!" << std::endl;
-    exit(1);
-  }
-
-  XFree(vi);
-
-  XStoreName( display, win, "SRP" );
-
-  XMapWindow( display, win );
-
-  glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
-  glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)
-           glXGetProcAddress( (const GLubyte*) "glXCreateContextAttribsARB");
-
-  context_error = false;
-  int (*old_error_handler)(Display*, XErrorEvent*) = XSetErrorHandler(&on_context_error);
-
-  if (!glXCreateContextAttribsARB) {
-    std::cout << "glXCreateContextAttribsARB not supported, falling back" << std::endl;
-    context = glXCreateNewContext( display, best_fbc, GLX_RGBA_TYPE, 0, True);
-  } else {
-    int context_attribs[] = {
-        GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-        GLX_CONTEXT_MINOR_VERSION_ARB, 1,
-        None
-    };
-
-    context = glXCreateContextAttribsARB( display, best_fbc, 0, True, context_attribs );
-  }
-
-  XSync(display, False);
-  if ( !context_error && context ) {
-    std::cout << "Created context!" << std::endl;
-  } else {
-    std::cerr << "Couldn't get a 3.0 context, failing" << std::endl;
-    XSetErrorHandler(old_error_handler);
-    exit(1);
-  }
-
-  XSync(display, False);
-  XSetErrorHandler(old_error_handler);
-
-  if (glXIsDirect(display, context)) {
-    std::cout << "Context is direct" << std::endl;
-  } else {
-    std::cout << "Context is indirect" << std::endl;
-  }
-
-  glXMakeCurrent(display, win, context);
-
-  GLenum err = glewInit();
-  if (err != GLEW_OK) {
-    std::cerr << "GLEW initialisation failed" << std::endl;
-    exit(1);
-  }
-  std::cout << "Created glew context with type " << glewGetString(GLEW_VERSION) << std::endl;
-
-  std::cout << "About to create window" << std::endl;
-}
-
-static int on_context_error( Display *display, XErrorEvent * event ) {
-  context_error = true;
-  std::cerr << "The thingy didn't worky " << event->error_code << " " << event->minor_code << std::endl;
-  return 0;
 }

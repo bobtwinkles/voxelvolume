@@ -12,6 +12,14 @@
 // Dereferences a random (invalid) pointer
 #define BUG() *((int*)0x01) = 0
 
+#define GLERR() { \
+  int the_gl_error_pls = glGetError(); \
+  if (the_gl_error_pls != 0) { \
+    std::cerr << __FILE__ << ":" << std::dec << __LINE__ << ": OpenGL bug! " << gluErrorString(the_gl_error_pls) << std::endl; \
+    exit(-1); \
+  } \
+  }
+
 namespace srp {
   long GetMemoryUsage();
 }

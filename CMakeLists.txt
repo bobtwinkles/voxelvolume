@@ -19,6 +19,7 @@ set (SRCS Main.cpp
           RenderChunk.cpp
           Tetrahedron.cpp
           Util.cpp
+          XWindow.cpp
           )
 
 add_executable(main ${SRCS})
