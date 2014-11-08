@@ -1,6 +1,8 @@
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
+#include <iostream>
+
 #define DISALLOW_COPY_AND_ASSIGN(t) \
   t(const t&); \
   void operator=(const t&);
@@ -10,7 +12,7 @@
 #define FLOAT_NEAR_EQ(a, b, epsilon) ( ABS((a) - (b)) < epsilon)
 
 // Dereferences a random (invalid) pointer
-#define BUG() *((int*)0x01) = 0
+#define BUG() { std::cerr << __FILE__ << ":" << __LINE__ << ": bug =(" << std::endl; *((int*)0x01) = 0; }
 
 namespace srp {
   long GetMemoryUsage();

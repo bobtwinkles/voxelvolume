@@ -5,6 +5,7 @@
 #include "RenderConfig.hpp"
 #include "Tetrahedron.hpp"
 #include "Util.hpp"
+#include "ogl/VertexBuffer.hpp"
 
 #include <vector>
 #include <GL/glew.h>
@@ -21,12 +22,15 @@ namespace srp {
 
       GLuint _vertex_buffer;
       GLuint _index_buffer;
+      GLuint _vao;
+
+      int _num_verts;
 
       std::vector<srp::Tetrahedron> _tetrahedrons;
 
       srp::RenderState _last_state;
 
-      void _UpdateBuffers(std::vector<srp::Vertex> &, std::vector<GLuint> &);
+      void _UpdateBuffers(std::vector<srp::ogl::Vertex> &, std::vector<GLuint> &);
 
       DISALLOW_COPY_AND_ASSIGN(RenderChunk);
     public:

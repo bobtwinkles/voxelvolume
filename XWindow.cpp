@@ -139,6 +139,7 @@ XWindow::XWindow(const char * Title) {
 
   glXMakeCurrent(_display, _win, _context);
 
+  glewExperimental = GL_TRUE;
   GLenum err = glewInit();
   if (err != GLEW_OK) {
     std::cerr << "GLEW initialisation failed" << std::endl;

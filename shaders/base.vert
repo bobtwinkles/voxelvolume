@@ -1,4 +1,4 @@
-#version 150
+#version 140
 
 uniform mat4 view_matrix, projection_matrix;
 
@@ -9,5 +9,5 @@ out vec3 Color;
 
 void main() {
   Color = color;
-  gl_position = projection_matrix * view_matrix * position;
+  gl_Position = projection_matrix * view_matrix * position;
 }

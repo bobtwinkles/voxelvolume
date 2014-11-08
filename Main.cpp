@@ -1,7 +1,14 @@
+#define GLM_FORCE_RADIANS
+
+#include <fstream>
 #include <iostream>
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
+
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <stdlib.h>
 #include <string>
 #include <time.h>
@@ -12,6 +19,7 @@
 #include "RenderChunk.hpp"
 #include "Util.hpp"
 #include "ogl/OGLUtil.hpp"
+#include "ogl/Shader.hpp"
 #include "Vec3.hpp"
 #include "XWindow.hpp"
 
@@ -20,12 +28,16 @@ srp::DataStore * dstore;
 srp::RenderState state(2500);
 srp::RenderChunk * chunk;
 srp::XWindow * window;
+srp::ogl::ShaderProgram * basic;
 
 int frame;
 int panel_z;
 GLuint tex;
 
 int last_width, last_height;
+
+glm::mat4 projection;
+glm::mat4 view;
 
 bool running;
 
@@ -34,7 +46,7 @@ void display_func(void);
 void reshape_window(void);
 void resize(int w, int h);
 void main_loop(void);
-void set_camera_pos_and_dir(const srp::Vec3f & Pos, const srp::Vec3f & Dir);
+glm::mat4 set_camera_pos_and_dir(const srp::Vec3f & Pos, const srp::Vec3f & Dir);
 static void set_texture_data(srp::DataStore & ds, int Z);
 
 int main(int argc, char ** argv) {
@@ -97,10 +109,37 @@ void main_loop() {
 
 void gl_init() {
   glClearColor(0, 0, 0, 0);
-//  glPointSize(3); // faile because it's OpenGL 1.0
+//  glPointSize(3); // fails because it's OpenGL 1.0
   glEnable(GL_DEPTH_TEST);
   GLERR();
 //  glEnable(GL_CULL_FACE);
+
+  std::shared_ptr<srp::ogl::Shader> vert(new srp::ogl::Shader(GL_VERTEX_SHADER));
+  std::shared_ptr<srp::ogl::Shader> frag(new srp::ogl::Shader(GL_FRAGMENT_SHADER));
+
+  std::ifstream vert_source("shaders/base.vert");
+  std::ifstream frag_source("shaders/base.frag");
+
+  if (!vert_source) {
+    std::cerr << "Failed to load vertex shader" << std::endl;
+    BUG();
+  }
+
+  if (!frag_source) {
+    std::cerr << "Failed to load fragment shader" << std::endl;
+    BUG();
+  }
+
+  vert->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource(vert_source)));
+  std::cout << srp::GetMemoryUsage() << std::endl;
+  frag->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource(frag_source)));
+
+  basic = new srp::ogl::ShaderProgram();
+  basic->AddShader(vert);
+  basic->AddShader(frag);
+  std::cout << "Linking program" << std::endl;
+  basic->Link();
+  std::cout << "Program linked" << std::endl;
 
   glGenTextures(1, &tex);
   GLERR();
@@ -115,74 +154,82 @@ void gl_init() {
 }
 
 void display_func(void) {
-  glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-  GLERR();
-
   frame += 1;
   panel_z = 0.5 * ( sin(frame / float(100)) + 1)  * dstore->GetDepth();
 
-  glPushMatrix();
-  glRotatef(frame, 0, 1, 0);
-  glTranslatef(-(dstore->GetWidth() / 2.f), 0, -(dstore->GetDepth() / 2.f));
+  glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+  GLERR();
 
-  // AXIS RENDER
-  glBegin(GL_LINES);
-  glColor3f(1, 0, 0);
-  glVertex3f(0, 0, 0);
-  glVertex3f(dstore->GetWidth(), 0, 0);
+  glm::mat4 real_view = glm::rotate(view, frame * 3.1415926f / 180.f, glm::vec3(0, 1, 0));
+  real_view = glm::translate(real_view, glm::vec3(-(dstore->GetWidth() / 2.f), 0, -(dstore->GetDepth() / 2.f)));
 
-  glColor3f(0, 1, 0);
-  glVertex3f(0, 0, 0);
-  glVertex3f(0, dstore->GetHeight(), 0);
+  basic->Bind();
+  GLERR();
 
-  glColor3f(0, 0, 1);
-  glVertex3f(0, 0, 0);
-  glVertex3f(0, 0, dstore->GetDepth());
+  basic->Upload("projection_matrix", projection);
+  GLERR();
+  basic->Upload("view_matrix", real_view);
+  GLERR();
 
-  glColor3f(1, 1, 0);
-  glVertex3f(dstore->GetWidth() / 2.f, 0, dstore->GetDepth() / 2.f);
-  glVertex3f(dstore->GetWidth() / 2.f, dstore->GetHeight(), dstore->GetDepth() / 2.f);
+  state.SetPositionIndex(basic->GetAttributeLocation("position"));
+  GLERR();
+  state.SetColorIndex   (basic->GetAttributeLocation("color"));
+  GLERR();
 
-  glEnd();
+  //    // AXIS RENDER
+  //    glBegin(GL_LINES);
+  //    glColor3f(1, 0, 0);
+  //    glVertex3f(0, 0, 0);
+  //    glVertex3f(dstore->GetWidth(), 0, 0);
 
-  // DATA RENDER
-  // glEnable(GL_VERTEX_ARRAY);
+  //    glColor3f(0, 1, 0);
+  //    glVertex3f(0, 0, 0);
+  //    glVertex3f(0, dstore->GetHeight(), 0);
 
-  // chunk->Render(state);
+  //    glColor3f(0, 0, 1);
+  //    glVertex3f(0, 0, 0);
+  //    glVertex3f(0, 0, dstore->GetDepth());
 
-  // PANEL RENDER
-  glEnable(GL_TEXTURE_2D);
+  //    glColor3f(1, 1, 0);
+  //    glVertex3f(dstore->GetWidth() / 2.f, 0, dstore->GetDepth() / 2.f);
+  //    glVertex3f(dstore->GetWidth() / 2.f, dstore->GetHeight(), dstore->GetDepth() / 2.f);
 
-  glBindTexture(GL_TEXTURE_2D, tex);
+  //    glEnd();
 
-  set_texture_data(*dstore, panel_z);
+  //    // DATA RENDER
+  //    // glEnable(GL_VERTEX_ARRAY);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+  chunk->Render(state);
 
-  glBegin(GL_QUADS);
+  //    // PANEL RENDER
+  //    glEnable(GL_TEXTURE_2D);
 
-  glColor3f(1, 1, 1);
+  //    glBindTexture(GL_TEXTURE_2D, tex);
 
-  glTexCoord2f(0, 0);
-  glVertex3f(0                 , 0                  , panel_z);
+  //    set_texture_data(*dstore, panel_z);
 
-  glTexCoord2f(0, 1);
-  glVertex3f(0                 , dstore->GetHeight(), panel_z);
+  //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+  //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
-  glTexCoord2f(1, 1);
-  glVertex3f(dstore->GetWidth(), dstore->GetHeight(), panel_z);
+  //    glBegin(GL_QUADS);
 
-  glTexCoord2f(1, 0);
-  glVertex3f(dstore->GetWidth(), 0                  , panel_z);
+  //    glColor3f(1, 1, 1);
 
-  glEnd();
+  //    glTexCoord2f(0, 0);
+  //    glVertex3f(0                 , 0                  , panel_z);
 
-  glDisable(GL_TEXTURE_2D);
+  //    glTexCoord2f(0, 1);
+  //    glVertex3f(0                 , dstore->GetHeight(), panel_z);
+
+  //    glTexCoord2f(1, 1);
+  //    glVertex3f(dstore->GetWidth(), dstore->GetHeight(), panel_z);
+
+  //    glTexCoord2f(1, 0);
+  //    glVertex3f(dstore->GetWidth(), 0                  , panel_z);
+
+  //    glEnd();
 
   // buffer swap
-  glPopMatrix();
-
   window->SwapBuffers();
 
   GLERR();
@@ -201,23 +248,17 @@ void reshape_window(void) {
 
 void resize(int w, int h) {
   glViewport(0, 0, w, h);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
 
-  gluPerspective(40, w / (float)h, 0.1, 10000);
+  projection = glm::infinitePerspective(40.f, w / (float)h, 0.1f);
+  view = set_camera_pos_and_dir(srp::Vec3f(256, 256, 256), (srp::Vec3f(1, 1, 1)).NormalizeSelf());
 
-  set_camera_pos_and_dir(srp::Vec3f(256, 256, 256), (srp::Vec3f(1, 1, 1)).NormalizeSelf());
-  glMatrixMode(GL_MODELVIEW);
+  GLERR();
 }
 
-void set_camera_pos_and_dir(const srp::Vec3f & c, const srp::Vec3f & d) {
-  glMatrixMode(GL_PROJECTION);
-
-  gluLookAt(c.GetX(), c.GetY(), c.GetZ(),
-            c.GetX() - d.GetX(), c.GetY() - d.GetY(), c.GetZ() - d.GetZ(),
-            0, 1, 0);
-
-  glMatrixMode(GL_MODELVIEW);
+glm::mat4 set_camera_pos_and_dir(const srp::Vec3f & c, const srp::Vec3f & d) {
+  return glm::lookAt(glm::vec3(c.GetX(), c.GetY(), c.GetZ()),
+                     glm::vec3(c.GetX() - d.GetX(), c.GetY() - d.GetY(), c.GetZ() - d.GetZ()),
+                     glm::vec3(0, 1, 0));
 }
 
 static void set_texture_data(srp::DataStore & ds, int Z) {

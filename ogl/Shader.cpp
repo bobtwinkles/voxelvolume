@@ -22,7 +22,7 @@ ShaderSource::ShaderSource(std::istream & SourceStream) {
 
 
 ShaderSource::~ShaderSource() {
-  delete _data;
+  delete[] _data;
 }
 
 //////////////////////////////////////////
@@ -69,8 +69,8 @@ Shader & Shader::Compile() {
   glCompileShader(this->_sid);
 
   // We don't need this stuff anymore, it's all in dirverland
-  delete lengths;
-  delete sources;
+  delete[] lengths;
+  delete[] sources;
 
   int param;
   glGetShaderiv(_sid, GL_COMPILE_STATUS, &param);
@@ -123,6 +123,7 @@ ShaderProgram & ShaderProgram::Link() {
     }
 
     glAttachShader(_sid, s->GetShaderID());
+    ++it;
   }
 
   glLinkProgram(_sid);
@@ -165,7 +166,18 @@ void ShaderProgram::Upload(const char * Name, glm::mat4 Mat) {
   GLint loc = FindUniform(Name);
   float data[16] = {0.0};
   const float * source = (const float *)glm::value_ptr(Mat);
-  glUniform4fv(loc, 16, data);
+  for (int i = 0; i < 16; ++i) {
+    data[i] = source[i];
+  }
+  glUniformMatrix4fv(loc, 1, GL_FALSE,data);
+}
+
+GLint ShaderProgram::GetAttributeLocation(const char * Name) {
+  GLint tr = glGetAttribLocation(_sid, (const GLchar *) Name);
+  if (tr < 0) {
+    BUG();
+  }
+  return tr;
 }
 
 void ShaderProgram::PrintProgramInfoLogAndExit() {
@@ -176,14 +188,14 @@ void ShaderProgram::PrintProgramInfoLogAndExit() {
   glGetProgramInfoLog(_sid, len, &len, buf);
   std::cerr << buf;
   std::cerr << std::endl;
-  std::exit(1);
+  BUG();
 }
 
 GLint ShaderProgram::FindUniform(const char * name) {
   GLint tr = glGetUniformLocation(_sid, name);
   if (tr < 0) {
     std::cerr << "Attempted to get unknown uniform " << name << std::endl;
-    std::exit(1);
+    BUG();
   }
   return tr;
 }
@@ -198,6 +210,8 @@ static void ReadFullFile(std::istream & SourceStream, GLchar ** OutBuf, GLint * 
   SourceStream.seekg(0, SourceStream.end);
   *OutLen = SourceStream.tellg();
   SourceStream.seekg(0, SourceStream.beg);
+
+  std::cout << *OutLen << std::endl;
 
   *OutBuf = new char [*OutLen];
 

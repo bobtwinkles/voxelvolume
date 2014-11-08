@@ -94,14 +94,14 @@ void Tetrahedron::Render(DataStore & DS,
                          RenderState & State,
                          std::vector<GLuint> & Indicies,
                          srp::IndexCache & Cache,
-                         std::vector<srp::Vertex> VertexData) {
+                         std::vector<srp::ogl::Vertex> & VertexData) {
   Vec3f edges[6];
   bool edges_seen[6] = {false, false, false, false, false, false};
   unsigned char tri = GetState(DS, State.GetThreshold());
 
-  glColor3f(_corners[0].GetX()/(float)RENDER_CHUNK_SIZE,
-            _corners[0].GetY()/(float)RENDER_CHUNK_SIZE,
-            _corners[0].GetZ()/(float)RENDER_CHUNK_SIZE);
+  //glColor3f(_corners[0].GetX()/(float)RENDER_CHUNK_SIZE,
+  //          _corners[0].GetY()/(float)RENDER_CHUNK_SIZE,
+  //          _corners[0].GetZ()/(float)RENDER_CHUNK_SIZE);
   //glColor3f(TRI_COLORS[tri][0], TRI_COLORS[tri][1], TRI_COLORS[tri][2]);
   //glColor3f(EDGE_COLORS[_index][0], EDGE_COLORS[_index][1], EDGE_COLORS[_index][2]);
   for (int i = 0; i < 6; ++i) {
@@ -121,7 +121,7 @@ void Tetrahedron::Render(DataStore & DS,
       edges_seen[edge] = true;
 
       if (Cache.find(edges[edge]) == Cache.end()) {
-        Vertex v;
+        srp::ogl::Vertex v;
         GLuint creation_index = 0;
         v.x = edges[edge].GetX(); v.y = edges[edge].GetY(); v.z = edges[edge].GetZ();
         v.nx = v.ny = v.nz = 0;
@@ -135,6 +135,8 @@ void Tetrahedron::Render(DataStore & DS,
         VertexData.push_back(v);
       }
     }
+
+    Indicies.push_back(Cache.find(edges[edge])->second);
 //    Vec3f point = edges[edge];
 //    glColor3f(EDGE_COLORS[edge][0], EDGE_COLORS[edge][1], EDGE_COLORS[edge][2]);
 //    glColor3f(point.GetX() / 256.f

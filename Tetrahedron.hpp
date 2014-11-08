@@ -5,6 +5,7 @@
 #include "DataStore.hpp"
 #include "RenderConfig.hpp"
 #include "RenderTypes.hpp"
+#include "ogl/VertexBuffer.hpp"
 
 #include <GL/glew.h>
 #include <vector>
@@ -20,7 +21,7 @@ namespace srp {
     public:
       Tetrahedron(Vec3i P1, Vec3i P2, Vec3i P3, Vec3i P4);
 
-      void Render(srp::DataStore & ds, RenderState & State, std::vector<GLuint> &, srp::IndexCache &, std::vector<srp::Vertex>);
+      void Render(srp::DataStore & ds, RenderState & State, std::vector<GLuint> &, srp::IndexCache &, std::vector<srp::ogl::Vertex> &);
 
       /// Returns the set of points which are above the threshold
       ///

@@ -1,13 +1,14 @@
 #include "RenderChunk.hpp"
 #include "RenderTypes.hpp"
 #include "Tetrahedron.hpp"
+#include "ogl/OGLUtil.hpp"
 
 #include <iostream>
 
 using srp::RenderChunk;
 using srp::Tetrahedron;
 using srp::Vec3i;
-using srp::Vertex;
+using srp::ogl::Vertex;
 
 RenderChunk::RenderChunk(srp::DataStore & ds, int X, int Y, int Z) : _ds(ds), _x(X), _y(Y), _z(Z), _last_state(0) {
   Tetrahedron * cube[6];
@@ -22,8 +23,12 @@ RenderChunk::RenderChunk(srp::DataStore & ds, int X, int Y, int Z) : _ds(ds), _x
     }
   }
 
+  glGenVertexArrays(1, &(this->_vao));
+  GLERR();
+
   GLuint buffs[2];
   glGenBuffers(2, buffs);
+  GLERR();
 
   this->_vertex_buffer = buffs[0];
   this->_index_buffer = buffs[1];
@@ -41,10 +46,11 @@ RenderChunk::~RenderChunk() {
 
 void RenderChunk::_UpdateBuffers(std::vector<Vertex> & Verts, std::vector<GLuint> & Indices) {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->_index_buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * Indices.size(), Indices.data(), GL_DYNAMIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * Indices.size(), Indices.data(), GL_STATIC_DRAW);
 
   glBindBuffer(GL_ARRAY_BUFFER, this->_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * Verts.size(), Verts.data(), GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * Verts.size(), Verts.data(), GL_STATIC_DRAW);
+  GLERR();
 }
 
 void RenderChunk::Update(srp::RenderState & state) {
@@ -52,7 +58,6 @@ void RenderChunk::Update(srp::RenderState & state) {
   std::vector<GLuint> index_buffer;
   std::vector<Vertex> vertex_data;
   TetrahedronList::iterator it = this->_tetrahedrons.begin();
-  std::vector<Vertex>::iterator it2;
 
   while (it != this->_tetrahedrons.end()) {
     Tetrahedron tet = *(it++);
@@ -64,16 +69,34 @@ void RenderChunk::Update(srp::RenderState & state) {
   }
 
   this->_UpdateBuffers(vertex_data, index_buffer);
-
-  std::cout << srp::GetMemoryUsage() << std::endl;
+  this->_num_verts = index_buffer.size();
 }
+
+#define OFFSET(a) ((void*)((char*)NULL + ((a)*sizeof(float))))
 
 void RenderChunk::Render(srp::RenderState & State) {
   if (State != this->_last_state) {
     this->Update(State);
+    GLERR();
     this->_last_state = State;
   }
-  //TODO
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->_index_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, this->_vertex_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->_index_buffer);
+  glBindVertexArray(this->_vao);
+  GLERR();
+
+  glEnableVertexAttribArray(State.GetPositionIndex());
+  glEnableVertexAttribArray(State.GetColorIndex());
+  GLERR();
+
+  glVertexAttribPointer(State.GetPositionIndex(), 3, GL_FLOAT, false, sizeof(Vertex), 0);
+  glVertexAttribPointer(State.GetColorIndex()   , 3, GL_FLOAT, false, sizeof(Vertex), OFFSET(3));
+  GLERR();
+
+  glDrawElements(GL_TRIANGLES, _num_verts, GL_UNSIGNED_INT, 0);
+  GLERR();
+
+  glDisableVertexAttribArray(State.GetPositionIndex());
+  glDisableVertexAttribArray(State.GetColorIndex());
+  GLERR();
 }
