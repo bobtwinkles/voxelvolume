@@ -20,19 +20,25 @@ long srp::GetMemoryUsage() {
 
 //// NOTE: ONLY WORK ON *NIX
 void srp::InitializeBaseDirectory(const char * Argv0) {
-  char cwd[CWD_BUFLEN];
-  getcwd(cwd, CWD_BUFLEN);
-  strncat(cwd, "/", CWD_BUFLEN);
-  strncat(cwd, Argv0, CWD_BUFLEN);
+  if (Argv0[0] == '/') {
+    basedir = std::string(Argv0);
+    int last_index = basedir.find_last_of('/');
+    basedir.erase(last_index + 1);
+  } else {
+    char cwd[CWD_BUFLEN];
+    getcwd(cwd, CWD_BUFLEN);
+    strncat(cwd, "/", CWD_BUFLEN);
+    strncat(cwd, Argv0, CWD_BUFLEN);
 
-  for (int i = strlen(cwd) - 1; i > 0; --i) {
-    if (cwd[i] == '/') {
-      cwd[i + 1] = 0;
-      break;
+    for (int i = strlen(cwd) - 1; i > 0; --i) {
+      if (cwd[i] == '/') {
+        cwd[i + 1] = 0;
+        break;
+      }
     }
-  }
 
-  basedir = std::string(cwd);
+    basedir = std::string(cwd);
+  }
 }
 
 std::string srp::GetBaseDirectory() {
