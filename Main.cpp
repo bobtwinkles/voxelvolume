@@ -191,7 +191,8 @@ void display_func(void) {
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
   GLERR();
 
-  glm::mat4 real_view = glm::rotate(view, frame * 3.1415926f / 180.f, glm::vec3(0, 1, 0));
+  glm::mat4 real_view;
+  real_view = glm::rotate(view, frame * 3.1415926f / 180.f, glm::vec3(0, 1, 0));
   real_view = glm::translate(real_view, glm::vec3(-(dstore->GetWidth() / 2.f), 0, -(dstore->GetDepth() / 2.f)));
 
   basic->Bind();
