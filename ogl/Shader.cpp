@@ -238,6 +238,7 @@ static void ReadFullFile(const char * FName, GLchar ** OutBuf, GLint * OutLen) {
     std::cerr << "Failed to open shader " << base << ", aborting" << std::endl;
     BUG();
   }
+  std::cout << "Loading shader " << FName << " from " << base << std::endl;
   ReadFullFile(stream, OutBuf, OutLen);
 }
 
@@ -245,8 +246,6 @@ static void ReadFullFile(std::istream & SourceStream, GLchar ** OutBuf, GLint * 
   SourceStream.seekg(0, SourceStream.end);
   *OutLen = SourceStream.tellg();
   SourceStream.seekg(0, SourceStream.beg);
-
-  std::cout << *OutLen << std::endl;
 
   *OutBuf = new char [*OutLen];
 

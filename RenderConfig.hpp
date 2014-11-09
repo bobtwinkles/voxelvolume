@@ -16,22 +16,19 @@ namespace srp {
       GLint _position_index, _color_index;
     public:
       RenderState(unsigned int Threshold) : _threshold(Threshold), _position_index(-1), _color_index(-1) {}
-      RenderState(const RenderState & Other) : _threshold(Other._threshold) {}
+      RenderState(const RenderState & Other);
       ~RenderState() {}
 
       inline void SetThreshold(unsigned int Threshold) { this->_threshold = Threshold; }
       inline unsigned int GetThreshold(void) const { return this->_threshold; }
 
       inline void SetPositionIndex(GLint PI) { _position_index = PI; }
-      inline GLint GetPositionIndex() { return _position_index; }
+      inline GLint GetPositionIndex() const { return _position_index; }
 
       inline void SetColorIndex(GLint PI) { _color_index = PI; }
-      inline GLint GetColorIndex() { return _color_index; }
+      inline GLint GetColorIndex() const { return _color_index; }
 
-      RenderState & operator= (const RenderState & Other) {
-        this->_threshold = Other._threshold;
-        return *this;
-      }
+      RenderState & operator= (const RenderState & Other);
 
       inline bool operator==(const RenderState & Other) const {
         if (&Other == this) {
@@ -45,5 +42,7 @@ namespace srp {
       }
   };
 }
+
+std::ostream & operator<< (std::ostream & Stream, const srp::RenderState & RS);
 
 #endif

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Util.hpp"
+#include "RenderConfig.hpp"
 
 namespace srp {
   namespace ogl {
@@ -17,15 +18,35 @@ namespace srp {
 
     class VertexBuffer {
       private:
-        GLint _index_buffer;
-        GLint _data_buffer;
+        GLuint _index_buffer;
+        GLuint _data_buffer;
+        GLuint _vao;
+        GLenum _usage;
+        GLenum _mode;
+
+        std::vector<Vertex> _verticies;
+        std::vector<GLuint> _indicies;
+
+        bool _up_to_date;
+
+        void _Init();
+
+        DISALLOW_COPY_AND_ASSIGN(VertexBuffer);
       public:
-        VertexBuffer(std::vector<Vertex> Verticies, std::vector<GLuint> Indices, GLenum Usage);
+        VertexBuffer(GLenum Mode, GLenum Usage);
+        VertexBuffer(std::vector<Vertex> Verticies, std::vector<GLuint> Indices, GLenum Mode, GLenum Usage);
         ~VertexBuffer();
 
-        void Render() const;
+        VertexBuffer * AddVertex(Vertex);
+        void ReplaceData(std::vector<Vertex> & Verticies, std::vector<GLuint> Indices);
+
+        void Sync(); // Syncs data to the GPU
+
+        void Render(srp::RenderState State) const;
     };
   }
 }
+
+std::ostream & operator<< (std::ostream & Stream, const srp::ogl::Vertex & Vert);
 
 #endif // _OGL_VERTEX_BUFFER_H_

@@ -20,10 +20,12 @@ include_directories(SYSTEM ${GLM_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCL
 set (SRCS Main.cpp
           DataStore.cpp
           RenderChunk.cpp
+          RenderConfig.cpp
           Tetrahedron.cpp
           Util.cpp
           XWindow.cpp
           ogl/Shader.cpp
+          ogl/VertexBuffer.cpp
           )
 
 add_executable(main ${SRCS})

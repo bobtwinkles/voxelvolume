@@ -29,6 +29,7 @@ srp::RenderState state(2500);
 srp::RenderChunk * chunk;
 srp::XWindow * window;
 srp::ogl::ShaderProgram * basic;
+srp::ogl::VertexBuffer * axis;
 
 int frame;
 int panel_z;
@@ -87,15 +88,18 @@ void main_loop() {
   clock_gettime(CLOCK_MONOTONIC_COARSE, &ctime);
   while (running) {
     clock_gettime(CLOCK_MONOTONIC_COARSE, &ptime);
+
     reshape_window();
     process_events();
     display_func();
+
     clock_gettime(CLOCK_MONOTONIC_COARSE, &ctime);
     diff.tv_sec  = ctime.tv_sec - ptime.tv_sec;
     diff.tv_nsec = ctime.tv_nsec - ptime.tv_nsec;
     long sleeptime = 16666666l - ( diff.tv_sec * 1000000000l + diff.tv_nsec );
     diff.tv_sec  = 0;
     diff.tv_nsec = sleeptime;
+
     while (diff.tv_nsec > 0) {
       struct timespec rem;
       int i = nanosleep(&diff, &rem);
@@ -127,8 +131,44 @@ void gl_init() {
   basic->AddShader(frag);
   basic->Link();
 
+  axis = new srp::ogl::VertexBuffer(GL_LINES, GL_STATIC_DRAW);
+
+  {
+    srp::ogl::Vertex origin;
+    origin.x = origin.y = origin.z = 0;
+    origin.r = origin.g = origin.b = 1;
+    origin.nx = origin.ny = origin.nz = origin.u = origin.v = 0;
+
+    srp::ogl::Vertex plus_x;
+    plus_x.x = 1;
+    plus_x.y = plus_x.z = 0;
+    plus_x.r = plus_x.g = plus_x.b = 1;
+    plus_x.nx = plus_x.ny = plus_x.nz = plus_x.u = plus_x.v = 0;
+
+    srp::ogl::Vertex plus_y;
+    plus_y.y = 1;
+    plus_y.x = plus_y.z = 0;
+    plus_y.r = plus_y.g = plus_y.b = 1;
+    plus_y.nx = plus_y.ny = plus_y.nz = plus_y.u = plus_y.v = 0;
+
+    srp::ogl::Vertex plus_z;
+    plus_z.z = 1;
+    plus_z.x = plus_z.y = 0;
+    plus_z.r = plus_z.g = plus_z.b = 1;
+    plus_z.nx = plus_z.ny = plus_z.nz = plus_z.u = plus_z.v = 0;
+
+    axis->AddVertex(origin);
+    axis->AddVertex(plus_x);
+    axis->AddVertex(origin);
+    axis->AddVertex(plus_y);
+    axis->AddVertex(origin);
+    axis->AddVertex(plus_z);
+    axis->Sync();
+  }
+
   glGenTextures(1, &tex);
   GLERR();
+
   glBindTexture(GL_TEXTURE_2D, tex);
   GLERR();
 
@@ -162,30 +202,11 @@ void display_func(void) {
   state.SetColorIndex   (basic->GetAttributeLocation("color"));
   GLERR();
 
-  //    // AXIS RENDER
-  //    glBegin(GL_LINES);
-  //    glColor3f(1, 0, 0);
-  //    glVertex3f(0, 0, 0);
-  //    glVertex3f(dstore->GetWidth(), 0, 0);
+  // AXIS RENDER
+  axis->Render(state);
 
-  //    glColor3f(0, 1, 0);
-  //    glVertex3f(0, 0, 0);
-  //    glVertex3f(0, dstore->GetHeight(), 0);
-
-  //    glColor3f(0, 0, 1);
-  //    glVertex3f(0, 0, 0);
-  //    glVertex3f(0, 0, dstore->GetDepth());
-
-  //    glColor3f(1, 1, 0);
-  //    glVertex3f(dstore->GetWidth() / 2.f, 0, dstore->GetDepth() / 2.f);
-  //    glVertex3f(dstore->GetWidth() / 2.f, dstore->GetHeight(), dstore->GetDepth() / 2.f);
-
-  //    glEnd();
-
-  //    // DATA RENDER
-  //    // glEnable(GL_VERTEX_ARRAY);
-
-  chunk->Render(state);
+  // DATA RENDER
+  //chunk->Render(state);
 
   //    // PANEL RENDER
   //    glEnable(GL_TEXTURE_2D);
