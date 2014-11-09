@@ -10,10 +10,10 @@
 namespace srp {
   namespace ogl {
     struct Vertex {
-      float x, y, z;
-      float r, g, b;
-      float nx, ny, nz;
-      float u, v;
+      float x, y, z, w;
+      float r, g, b, a;
+//      float nx, ny, nz;
+//      float u, v;
     };
 
     class VertexBuffer {

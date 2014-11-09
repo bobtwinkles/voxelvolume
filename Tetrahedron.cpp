@@ -124,12 +124,12 @@ void Tetrahedron::Render(DataStore & DS,
         srp::ogl::Vertex v;
         GLuint creation_index = 0;
         v.x = edges[edge].GetX(); v.y = edges[edge].GetY(); v.z = edges[edge].GetZ();
-        v.nx = v.ny = v.nz = 0;
         v.r = v.x / 256.f;
         v.g = v.y / 256.f;
         v.b = v.z / 256.f;
-        v.u = 0;
-        v.v = 0;
+        // v.nx = v.ny = v.nz = 0;
+        // v.u = 0;
+        // v.v = 0;
         creation_index = VertexData.size();
         Cache.insert(std::make_pair(edges[edge], creation_index));
         VertexData.push_back(v);

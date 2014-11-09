@@ -114,8 +114,7 @@ void main_loop() {
 }
 
 void gl_init() {
-  glClearColor(0, 0, 0, 0);
-//  glPointSize(3); // fails because it's OpenGL 1.0
+  glClearColor(0.1f, 0.1f, 0.4f, 0.0f);
   glEnable(GL_DEPTH_TEST);
   GLERR();
 //  glEnable(GL_CULL_FACE);
@@ -131,40 +130,46 @@ void gl_init() {
   basic->AddShader(frag);
   basic->Link();
 
-  axis = new srp::ogl::VertexBuffer(GL_LINES, GL_STATIC_DRAW);
 
-  {
-    srp::ogl::Vertex origin;
-    origin.x = origin.y = origin.z = 0;
-    origin.r = origin.g = origin.b = 1;
-    origin.nx = origin.ny = origin.nz = origin.u = origin.v = 0;
+   {
+     axis = new srp::ogl::VertexBuffer(GL_LINES, GL_STATIC_DRAW);
+     srp::ogl::Vertex origin;
+     origin.x = origin.y = origin.z = 0;
+     origin.r = origin.g = origin.b = 1;
 
-    srp::ogl::Vertex plus_x;
-    plus_x.x = 1;
-    plus_x.y = plus_x.z = 0;
-    plus_x.r = plus_x.g = plus_x.b = 1;
-    plus_x.nx = plus_x.ny = plus_x.nz = plus_x.u = plus_x.v = 0;
+     srp::ogl::Vertex plus_x;
+     plus_x.x = dstore->GetWidth();
+     plus_x.y = plus_x.z = 0;
+     plus_x.r = plus_x.g = plus_x.b = 1;
 
-    srp::ogl::Vertex plus_y;
-    plus_y.y = 1;
-    plus_y.x = plus_y.z = 0;
-    plus_y.r = plus_y.g = plus_y.b = 1;
-    plus_y.nx = plus_y.ny = plus_y.nz = plus_y.u = plus_y.v = 0;
+     srp::ogl::Vertex plus_y;
+     plus_y.y = dstore->GetHeight();
+     plus_y.x = plus_y.z = 0;
+     plus_y.r = plus_y.g = plus_y.b = 1;
 
-    srp::ogl::Vertex plus_z;
-    plus_z.z = 1;
-    plus_z.x = plus_z.y = 0;
-    plus_z.r = plus_z.g = plus_z.b = 1;
-    plus_z.nx = plus_z.ny = plus_z.nz = plus_z.u = plus_z.v = 0;
+     srp::ogl::Vertex plus_z;
+     plus_z.z = dstore->GetDepth();
+     plus_z.x = plus_z.y = 0;
+     plus_z.r = plus_z.g = plus_z.b = 1;
 
-    axis->AddVertex(origin);
-    axis->AddVertex(plus_x);
-    axis->AddVertex(origin);
-    axis->AddVertex(plus_y);
-    axis->AddVertex(origin);
-    axis->AddVertex(plus_z);
-    axis->Sync();
-  }
+     srp::ogl::Vertex center;
+     center.x = dstore->GetWidth() / 2.f;
+     center.z = dstore->GetDepth() / 2.f;
+     center.y = 0;
+     center.r = center.g = 1;
+     center.b = 0;
+
+     axis->AddVertex(origin);
+     axis->AddVertex(plus_x);
+     axis->AddVertex(origin);
+     axis->AddVertex(plus_y);
+     axis->AddVertex(origin);
+     axis->AddVertex(plus_z);
+     axis->AddVertex(center);
+     center.y = dstore->GetHeight();
+     axis->AddVertex(center);
+     axis->Sync();
+   }
 
   glGenTextures(1, &tex);
   GLERR();
@@ -206,7 +211,7 @@ void display_func(void) {
   axis->Render(state);
 
   // DATA RENDER
-  //chunk->Render(state);
+  chunk->Render(state);
 
   //    // PANEL RENDER
   //    glEnable(GL_TEXTURE_2D);
@@ -256,7 +261,7 @@ void reshape_window(void) {
 void resize(int w, int h) {
   glViewport(0, 0, w, h);
 
-  projection = glm::infinitePerspective(40.f, w / (float)h, 0.1f);
+  projection = glm::perspective(40.f, w / (float)h, 0.1f, 1000.f);
   view = set_camera_pos_and_dir(srp::Vec3f(256, 256, 256), (srp::Vec3f(1, 1, 1)).NormalizeSelf());
 
   GLERR();

@@ -16,7 +16,7 @@ RenderChunk::RenderChunk(srp::DataStore & ds, int X, int Y, int Z) :
   _y(Y),
   _z(Z),
   _last_state(0),
-  _buffer(GL_POINTS, GL_STATIC_DRAW) {
+  _buffer(GL_TRIANGLES, GL_STATIC_DRAW) {
   Tetrahedron * cube[6];
   for (int x = X * RENDER_CHUNK_SIZE; x < (X + 1) * RENDER_CHUNK_SIZE; ++x) {
     for (int y = Y * RENDER_CHUNK_SIZE; y < (Y + 1) * RENDER_CHUNK_SIZE; ++y) {
