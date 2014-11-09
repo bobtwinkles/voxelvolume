@@ -1,13 +1,17 @@
 #include "Shader.hpp"
 
-#include <glm/gtc/type_ptr.hpp>
 #include <fstream>
+#include <glm/gtc/type_ptr.hpp>
+#include <set>
+#include <utility>
 
 #include "OGLUtil.hpp"
 
 using srp::ogl::Shader;
 using srp::ogl::ShaderSource;
 using srp::ogl::ShaderProgram;
+
+static std::set<std::pair<GLuint, const char*>> __seen_invalid;
 
 static void ReadFullFile(std::istream & SourceStream, char ** OutString, int * OutLen);
 static void ReadFullFile(const char* FName, char ** OutString, int * OutLen);
@@ -159,16 +163,25 @@ void ShaderProgram::Bind() {
 
 void ShaderProgram::Upload(const char * Name, glm::vec2 Vec) {
   GLint loc = FindUniform(Name);
+  if (loc < 0) {
+    return;
+  }
   glUniform2f(loc, Vec.x, Vec.y);
 }
 
 void ShaderProgram::Upload(const char * Name, glm::vec3 Vec) {
   GLint loc = FindUniform(Name);
+  if (loc < 0) {
+    return;
+  }
   glUniform3f(loc, Vec.x, Vec.y, Vec.z);
 }
 
 void ShaderProgram::Upload(const char * Name, glm::mat4 Mat) {
   GLint loc = FindUniform(Name);
+  if (loc < 0) {
+    return;
+  }
   float data[16] = {0.0};
   const float * source = (const float *)glm::value_ptr(Mat);
   for (int i = 0; i < 16; ++i) {
@@ -180,7 +193,10 @@ void ShaderProgram::Upload(const char * Name, glm::mat4 Mat) {
 GLint ShaderProgram::GetAttributeLocation(const char * Name) {
   GLint tr = glGetAttribLocation(_sid, (const GLchar *) Name);
   if (tr < 0) {
-    BUG();
+    if (__seen_invalid.find(std::make_pair(_sid, Name)) == __seen_invalid.end()) {
+      std::cerr << "WARNING: Tried to get attribute location of non-existant or inactive attribute " << Name << std::endl;
+      __seen_invalid.insert(std::make_pair(_sid, Name));
+    }
   }
   return tr;
 }
@@ -196,11 +212,13 @@ void ShaderProgram::PrintProgramInfoLogAndExit() {
   BUG();
 }
 
-GLint ShaderProgram::FindUniform(const char * name) {
-  GLint tr = glGetUniformLocation(_sid, name);
+GLint ShaderProgram::FindUniform(const char * Name) {
+  GLint tr = glGetUniformLocation(_sid, Name);
   if (tr < 0) {
-    std::cerr << "Attempted to get unknown uniform " << name << std::endl;
-    BUG();
+    if (__seen_invalid.find(std::make_pair(_sid, Name)) == __seen_invalid.end()) {
+      std::cerr << "WARNING: Tried to upload to invalid or inactive uniform " << Name << std::endl;
+      __seen_invalid.insert(std::make_pair(_sid, Name));
+    }
   }
   return tr;
 }
