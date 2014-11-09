@@ -97,7 +97,7 @@ void VertexBuffer::Render(srp::RenderState State) const {
   }
   if (State.GetColorIndex() >= 0) {
     glEnableVertexAttribArray(State.GetColorIndex());
-    glVertexAttribPointer(State.GetColorIndex()   , 3, GL_FLOAT, false, sizeof(Vertex), OFFSET(3));
+    glVertexAttribPointer(State.GetColorIndex()   , 3, GL_FLOAT, false, sizeof(Vertex), OFFSET(4));
     GLERR();
   }
   GLERR();
