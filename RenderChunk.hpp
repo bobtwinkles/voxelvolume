@@ -20,17 +20,11 @@ namespace srp {
 
       int _x, _y, _z;
 
-      GLuint _vertex_buffer;
-      GLuint _index_buffer;
-      GLuint _vao;
-
-      int _num_verts;
+      srp::ogl::VertexBuffer _buffer;
 
       std::vector<srp::Tetrahedron> _tetrahedrons;
 
       srp::RenderState _last_state;
-
-      void _UpdateBuffers(std::vector<srp::ogl::Vertex> &, std::vector<GLuint> &);
 
       DISALLOW_COPY_AND_ASSIGN(RenderChunk);
     public:
