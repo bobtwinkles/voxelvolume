@@ -10,6 +10,7 @@
 using srp::XWindow;
 
 static bool context_error;
+static Display * display;
 static int on_context_error( Display *display, XErrorEvent * event );
 
 XWindow::XWindow(const char * Title) {
@@ -104,6 +105,7 @@ XWindow::XWindow(const char * Title) {
            glXGetProcAddress( (const GLubyte*) "glXCreateContextAttribsARB");
 
   context_error = false;
+  display = _display;
   int (*old_error_handler)(Display*, XErrorEvent*) = XSetErrorHandler(&on_context_error);
 
   if (!glXCreateContextAttribsARB) {
@@ -123,13 +125,14 @@ XWindow::XWindow(const char * Title) {
   if ( !context_error && _context ) {
     std::cout << "Created context!" << std::endl;
   } else {
-    std::cerr << "Couldn't get a 3.0 context, failing" << std::endl;
+    std::cerr << "Couldn't get a 3.1 context, failing" << std::endl;
     XSetErrorHandler(old_error_handler);
     exit(1);
   }
 
   XSync(_display, False);
   XSetErrorHandler(old_error_handler);
+  display = 0;
 
   if (glXIsDirect(_display, _context)) {
     std::cout << "Context is direct" << std::endl;
@@ -167,8 +170,13 @@ void XWindow::GetAttributes(XWindowAttributes * WA) const {
   XGetWindowAttributes(_display, _win, WA);
 }
 
+#define ERRBUFFER_LEN 256
+
 static int on_context_error( Display * Display, XErrorEvent * Event ) {
+  char error_buffer[ERRBUFFER_LEN];
   context_error = true;
-  std::cerr << "The thingy didn't worky " << Event->error_code << " " << Event->minor_code << std::endl;
+  std::cerr << "The thingy didn't worky " << (int)Event->error_code << " " << (int)Event->minor_code << std::endl;
+  XGetErrorText(display, Event->error_code, error_buffer, ERRBUFFER_LEN);
+  std::cerr << error_buffer << std::endl;
   return 0;
 }
