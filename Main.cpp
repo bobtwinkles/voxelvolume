@@ -130,46 +130,45 @@ void gl_init() {
   basic->AddShader(frag);
   basic->Link();
 
+  {
+    axis = new srp::ogl::VertexBuffer(GL_LINES, GL_STATIC_DRAW);
+    srp::ogl::Vertex origin;
+    origin.x = origin.y = origin.z = 0;
+    origin.r = origin.g = origin.b = 1;
 
-   {
-     axis = new srp::ogl::VertexBuffer(GL_LINES, GL_STATIC_DRAW);
-     srp::ogl::Vertex origin;
-     origin.x = origin.y = origin.z = 0;
-     origin.r = origin.g = origin.b = 1;
+    srp::ogl::Vertex plus_x;
+    plus_x.x = dstore->GetWidth();
+    plus_x.y = plus_x.z = 0;
+    plus_x.r = plus_x.g = plus_x.b = 1;
 
-     srp::ogl::Vertex plus_x;
-     plus_x.x = dstore->GetWidth();
-     plus_x.y = plus_x.z = 0;
-     plus_x.r = plus_x.g = plus_x.b = 1;
+    srp::ogl::Vertex plus_y;
+    plus_y.y = dstore->GetHeight();
+    plus_y.x = plus_y.z = 0;
+    plus_y.r = plus_y.g = plus_y.b = 1;
 
-     srp::ogl::Vertex plus_y;
-     plus_y.y = dstore->GetHeight();
-     plus_y.x = plus_y.z = 0;
-     plus_y.r = plus_y.g = plus_y.b = 1;
+    srp::ogl::Vertex plus_z;
+    plus_z.z = dstore->GetDepth();
+    plus_z.x = plus_z.y = 0;
+    plus_z.r = plus_z.g = plus_z.b = 1;
 
-     srp::ogl::Vertex plus_z;
-     plus_z.z = dstore->GetDepth();
-     plus_z.x = plus_z.y = 0;
-     plus_z.r = plus_z.g = plus_z.b = 1;
+    srp::ogl::Vertex center;
+    center.x = dstore->GetWidth() / 2.f;
+    center.z = dstore->GetDepth() / 2.f;
+    center.y = 0;
+    center.r = center.g = 1;
+    center.b = 0;
 
-     srp::ogl::Vertex center;
-     center.x = dstore->GetWidth() / 2.f;
-     center.z = dstore->GetDepth() / 2.f;
-     center.y = 0;
-     center.r = center.g = 1;
-     center.b = 0;
-
-     axis->AddVertex(origin);
-     axis->AddVertex(plus_x);
-     axis->AddVertex(origin);
-     axis->AddVertex(plus_y);
-     axis->AddVertex(origin);
-     axis->AddVertex(plus_z);
-     axis->AddVertex(center);
-     center.y = dstore->GetHeight();
-     axis->AddVertex(center);
-     axis->Sync();
-   }
+    axis->AddVertex(origin);
+    axis->AddVertex(plus_x);
+    axis->AddVertex(origin);
+    axis->AddVertex(plus_y);
+    axis->AddVertex(origin);
+    axis->AddVertex(plus_z);
+    axis->AddVertex(center);
+    center.y = dstore->GetHeight();
+    axis->AddVertex(center);
+    axis->Sync();
+  }
 
   glGenTextures(1, &tex);
   GLERR();
