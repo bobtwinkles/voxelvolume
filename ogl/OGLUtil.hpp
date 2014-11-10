@@ -13,6 +13,8 @@
     } \
   }
 
+#define OFFSET(a) ((void*)((char*)NULL + ((a)*sizeof(float))))
+
 namespace srp {
 }
 

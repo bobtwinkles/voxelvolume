@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 
 #include "Util.hpp"
+#include "ogl/Shader.hpp"
 
 // Global renderer state
 
@@ -14,19 +15,17 @@ namespace srp {
     private:
       unsigned int _threshold;
       GLint _position_index, _color_index;
+      srp::ogl::ShaderProgram * _current_shader;
     public:
-      RenderState(unsigned int Threshold) : _threshold(Threshold), _position_index(-1), _color_index(-1) {}
+      RenderState(unsigned int Threshold) : _threshold(Threshold), _current_shader(NULL) {}
       RenderState(const RenderState & Other);
       ~RenderState() {}
 
       inline void SetThreshold(unsigned int Threshold) { this->_threshold = Threshold; }
       inline unsigned int GetThreshold(void) const { return this->_threshold; }
 
-      inline void SetPositionIndex(GLint PI) { _position_index = PI; }
-      inline GLint GetPositionIndex() const { return _position_index; }
-
-      inline void SetColorIndex(GLint PI) { _color_index = PI; }
-      inline GLint GetColorIndex() const { return _color_index; }
+      inline void SetCurrentShader(srp::ogl::ShaderProgram * SP) { _current_shader = SP; }
+      inline srp::ogl::ShaderProgram * GetCurrentShaderProgram() const { return _current_shader; }
 
       RenderState & operator= (const RenderState & Other);
 

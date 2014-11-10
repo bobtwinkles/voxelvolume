@@ -5,8 +5,6 @@
 using srp::ogl::VertexBuffer;
 using srp::ogl::Vertex;
 
-#define OFFSET(a) ((void*)((char*)NULL + ((a)*sizeof(float))))
-
 void VertexBuffer::_Init() {
   GLuint buffers[2];
   glGenBuffers(2, buffers);
@@ -71,8 +69,6 @@ void VertexBuffer::Sync() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _index_buffer);
     GLERR();
 
-    std::cout << "There are " << _indicies.size() << " indicies to transfer" << std::endl;
-
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * _verticies.size(), _verticies.data(), _usage);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * _indicies.size(), _indicies.data(), _usage);
     GLERR();
@@ -90,14 +86,18 @@ void VertexBuffer::Render(srp::RenderState State) const {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _index_buffer);
   GLERR();
 
-  if (State.GetPositionIndex() >= 0) {
-    glEnableVertexAttribArray(State.GetPositionIndex());
-    glVertexAttribPointer(State.GetPositionIndex(), 3, GL_FLOAT, false, sizeof(Vertex), 0);
+  srp::ogl::ShaderProgram * cs = State.GetCurrentShaderProgram();
+  GLint pos_index = cs->GetAttributeLocation("position");
+  GLint color_index = cs->GetAttributeLocation("color");
+
+  if (pos_index >= 0) {
+    glEnableVertexAttribArray(pos_index);
+    glVertexAttribPointer    (pos_index  , 3, GL_FLOAT, false, sizeof(Vertex), 0);
     GLERR();
   }
-  if (State.GetColorIndex() >= 0) {
-    glEnableVertexAttribArray(State.GetColorIndex());
-    glVertexAttribPointer(State.GetColorIndex()   , 3, GL_FLOAT, false, sizeof(Vertex), OFFSET(4));
+  if (color_index >= 0) {
+    glEnableVertexAttribArray(color_index);
+    glVertexAttribPointer    (color_index, 3, GL_FLOAT, false, sizeof(Vertex), OFFSET(4));
     GLERR();
   }
   GLERR();
@@ -105,12 +105,12 @@ void VertexBuffer::Render(srp::RenderState State) const {
   glDrawElements(_mode, _indicies.size(), GL_UNSIGNED_INT, 0);
   GLERR();
 
-  if (State.GetPositionIndex() >= 0) {
-    glDisableVertexAttribArray(State.GetPositionIndex());
+  if (pos_index >= 0) {
+    glDisableVertexAttribArray(pos_index);
     GLERR();
   }
-  if (State.GetColorIndex() >= 0) {
-    glDisableVertexAttribArray(State.GetColorIndex());
+  if (color_index >= 0) {
+    glDisableVertexAttribArray(color_index);
     GLERR();
   }
 

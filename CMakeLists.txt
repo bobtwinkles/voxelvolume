@@ -26,6 +26,7 @@ set (SRCS Main.cpp
           XWindow.cpp
           ogl/Shader.cpp
           ogl/VertexBuffer.cpp
+          ogl/TexturedVertexBuffer.cpp
           )
 
 add_executable(main ${SRCS})

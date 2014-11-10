@@ -190,6 +190,12 @@ void ShaderProgram::Upload(const char * Name, glm::mat4 Mat) {
   glUniformMatrix4fv(loc, 1, GL_FALSE,data);
 }
 
+void ShaderProgram::Upload(const char * Name, GLint sampler) {
+  GLint loc = FindUniform(Name);
+  if (loc < 0) { return; }
+  glUniform1i(loc, sampler);
+}
+
 GLint ShaderProgram::GetAttributeLocation(const char * Name) {
   GLint tr = glGetAttribLocation(_sid, (const GLchar *) Name);
   if (tr < 0) {
@@ -198,6 +204,7 @@ GLint ShaderProgram::GetAttributeLocation(const char * Name) {
       __seen_invalid.insert(std::make_pair(_sid, Name));
     }
   }
+  GLERR();
   return tr;
 }
 
@@ -222,6 +229,10 @@ GLint ShaderProgram::FindUniform(const char * Name) {
   }
   return tr;
 }
+
+//std::ostream & operator<< (std::ostream & Stream, const srp::ogl::ShaderProgram & SP ) {
+//  Stream << "{ShaderProgram: [ID " << SP._sid << "]}";
+//}
 
 //////////////////////////////////////////
 //////////////////////////////////////////

@@ -55,17 +55,24 @@ namespace srp {
 
     class ShaderProgram {
       private:
+        friend std::ostream & operator<< (std::ostream & Ost, const srp::ogl::ShaderProgram & SP) {
+          Ost << "{ShaderProgram: [ID " << SP._sid << "]}";
+          return Ost;
+        }
+
         GLuint _sid;
 
         bool _linked;
         std::vector<std::shared_ptr<Shader>> _shaders;
 
         void PrintProgramInfoLogAndExit();
+        std::ostream & _WriteToStream (std::ostream & Stream);
 
         GLint FindUniform(const char * name);
 
         DISALLOW_COPY_AND_ASSIGN(ShaderProgram);
       public:
+
         ShaderProgram();
         ~ShaderProgram();
 
@@ -84,12 +91,12 @@ namespace srp {
         void Upload(const char * Name, glm::vec2 vec);
         void Upload(const char * Name, glm::vec3 vec);
         void Upload(const char * Name, glm::mat4 mat);
+        void Upload(const char * Name, GLint sampler);
 
         // Fetch functions
         GLint GetAttributeLocation(const char * Name);
     };
   }
 }
-
 
 #endif //_OGL_SHADER_H_

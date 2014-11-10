@@ -20,6 +20,8 @@
 #include "Util.hpp"
 #include "ogl/OGLUtil.hpp"
 #include "ogl/Shader.hpp"
+#include "ogl/VertexBuffer.hpp"
+#include "ogl/TexturedVertexBuffer.hpp"
 #include "Vec3.hpp"
 #include "XWindow.hpp"
 
@@ -29,11 +31,12 @@ srp::RenderState state(2500);
 srp::RenderChunk * chunk;
 srp::XWindow * window;
 srp::ogl::ShaderProgram * basic;
+srp::ogl::ShaderProgram * textured;
 srp::ogl::VertexBuffer * axis;
+srp::ogl::TexturedVertexBuffer * face;
 
 int frame;
 int panel_z;
-GLuint tex;
 
 int last_width, last_height;
 
@@ -47,6 +50,7 @@ void display_func(void);
 void reshape_window(void);
 void resize(int w, int h);
 void main_loop(void);
+srp::ogl::ShaderProgram * create_shader(const char* Vert, const char * Frag);
 glm::mat4 set_camera_pos_and_dir(const srp::Vec3f & Pos, const srp::Vec3f & Dir);
 static void set_texture_data(srp::DataStore & ds, int Z);
 
@@ -119,16 +123,8 @@ void gl_init() {
   GLERR();
 //  glEnable(GL_CULL_FACE);
 
-  std::shared_ptr<srp::ogl::Shader> vert(new srp::ogl::Shader(GL_VERTEX_SHADER));
-  std::shared_ptr<srp::ogl::Shader> frag(new srp::ogl::Shader(GL_FRAGMENT_SHADER));
-
-  vert->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource("base.vert")));
-  frag->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource("base.frag")));
-
-  basic = new srp::ogl::ShaderProgram();
-  basic->AddShader(vert);
-  basic->AddShader(frag);
-  basic->Link();
+  basic = create_shader("base.vert", "base.frag");
+  textured = create_shader("texture.vert", "texture.frag");
 
   {
     axis = new srp::ogl::VertexBuffer(GL_LINES, GL_STATIC_DRAW);
@@ -170,16 +166,16 @@ void gl_init() {
     axis->Sync();
   }
 
-  glGenTextures(1, &tex);
-  GLERR();
-
-  glBindTexture(GL_TEXTURE_2D, tex);
-  GLERR();
+  {
+    face = new srp::ogl::TexturedVertexBuffer(GL_TRIANGLES, GL_STATIC_DRAW);
+    srp::ogl::QueueTexturedRectangle(*face, glm::vec3(0, 0, 0),
+                                            glm::vec3(dstore->GetWidth(), dstore->GetHeight(), 0),
+                                            glm::vec2(0, 0),
+                                            glm::vec2(1, 1));
+    face->Sync();
+  }
 
   set_texture_data(*dstore, panel_z);
-  GLERR();
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
   GLERR();
 }
 
@@ -198,14 +194,10 @@ void display_func(void) {
   GLERR();
 
   basic->Upload("projection_matrix", projection);
-  GLERR();
   basic->Upload("view_matrix", real_view);
   GLERR();
 
-  state.SetPositionIndex(basic->GetAttributeLocation("position"));
-  GLERR();
-  state.SetColorIndex   (basic->GetAttributeLocation("color"));
-  GLERR();
+  state.SetCurrentShader(basic);
 
   // AXIS RENDER
   axis->Render(state);
@@ -213,33 +205,18 @@ void display_func(void) {
   // DATA RENDER
   chunk->Render(state);
 
-  //    // PANEL RENDER
-  //    glEnable(GL_TEXTURE_2D);
+  // PANEL RENDER
+  textured->Bind();
+  state.SetCurrentShader(textured);
+  textured->Upload("projection_matrix", projection);
 
-  //    glBindTexture(GL_TEXTURE_2D, tex);
+  glm::mat4 translated = glm::translate(real_view, glm::vec3(0, 0, panel_z));
 
-  //    set_texture_data(*dstore, panel_z);
+  textured->Upload("view_matrix", translated);
+  GLERR();
 
-  //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-  //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-
-  //    glBegin(GL_QUADS);
-
-  //    glColor3f(1, 1, 1);
-
-  //    glTexCoord2f(0, 0);
-  //    glVertex3f(0                 , 0                  , panel_z);
-
-  //    glTexCoord2f(0, 1);
-  //    glVertex3f(0                 , dstore->GetHeight(), panel_z);
-
-  //    glTexCoord2f(1, 1);
-  //    glVertex3f(dstore->GetWidth(), dstore->GetHeight(), panel_z);
-
-  //    glTexCoord2f(1, 0);
-  //    glVertex3f(dstore->GetWidth(), 0                  , panel_z);
-
-  //    glEnd();
+  set_texture_data(*dstore, panel_z);
+  face->Render(state);
 
   // buffer swap
   window->SwapBuffers();
@@ -261,7 +238,8 @@ void reshape_window(void) {
 void resize(int w, int h) {
   glViewport(0, 0, w, h);
 
-  projection = glm::perspective(40.f, w / (float)h, 0.1f, 1000.f);
+  //projection = glm::perspective(45.f, w / (float)h, 0.1f, 1000.f);
+  projection = glm::perspective((90.f * 3.14159f) / 180.f, w / (float)h, 0.1f, 1000.f);
   view = set_camera_pos_and_dir(srp::Vec3f(256, 256, 256), (srp::Vec3f(1, 1, 1)).NormalizeSelf());
 
   GLERR();
@@ -271,6 +249,21 @@ glm::mat4 set_camera_pos_and_dir(const srp::Vec3f & c, const srp::Vec3f & d) {
   return glm::lookAt(glm::vec3(c.GetX(), c.GetY(), c.GetZ()),
                      glm::vec3(c.GetX() - d.GetX(), c.GetY() - d.GetY(), c.GetZ() - d.GetZ()),
                      glm::vec3(0, 1, 0));
+}
+
+srp::ogl::ShaderProgram * create_shader(const char * Vert, const char * Frag) {
+  std::shared_ptr<srp::ogl::Shader> vert(new srp::ogl::Shader(GL_VERTEX_SHADER));
+  std::shared_ptr<srp::ogl::Shader> frag(new srp::ogl::Shader(GL_FRAGMENT_SHADER));
+
+  vert->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource(Vert)));
+  frag->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource(Frag)));
+
+  srp::ogl::ShaderProgram * tr = new srp::ogl::ShaderProgram();
+  tr->AddShader(vert);
+  tr->AddShader(frag);
+  tr->Link();
+
+  return tr;
 }
 
 static void set_texture_data(srp::DataStore & ds, int Z) {
@@ -285,5 +278,5 @@ static void set_texture_data(srp::DataStore & ds, int Z) {
     }
   }
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ds.GetWidth(), ds.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+  face->SetTextureData(ds.GetWidth(), ds.GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 }
