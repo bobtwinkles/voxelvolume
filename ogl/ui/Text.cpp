@@ -41,7 +41,7 @@ static GLuint data_buffer;
 
 using namespace srp::ogl::ui;
 
-#define CACHE_TEXTURE_SIZE 512
+#define CACHE_TEXTURE_SIZE 128
 
 void srp::ogl::ui::TextInit(srp::XWindow & Window) {
   int error;
@@ -99,12 +99,10 @@ void srp::ogl::ui::TextInit(srp::XWindow & Window) {
     s.y_advance = g->advance.y >> 6;
     s.tl = glm::vec2(cx / float(CACHE_TEXTURE_SIZE), cy / float(CACHE_TEXTURE_SIZE));
     s.br = glm::vec2((cx + s.bm_width) / float(CACHE_TEXTURE_SIZE), (cy + s.bm_height) / float(CACHE_TEXTURE_SIZE));
-    char_cache.insert(std::make_pair(i, s));
     if (s.bm_height > max_height) {
       max_height = g->bitmap.rows;
     }
     if (s.bm_width + cx + 1 >= CACHE_TEXTURE_SIZE) {
-      std::cout << "wrapping on char " << (char) i << std::endl;
       cx = 0;
       cy += max_height + 2;
       s.tl = glm::vec2(cx / float(CACHE_TEXTURE_SIZE), cy / float(CACHE_TEXTURE_SIZE));
@@ -114,7 +112,7 @@ void srp::ogl::ui::TextInit(srp::XWindow & Window) {
         BUG();
       }
     }
-    std::cout << "Char " << (char)i << " at x: " << cx << " y:" << cy << std::endl;
+    char_cache.insert(std::make_pair(i, s));
     if (!(g->bitmap.buffer)) {
       cx += s.bm_width + 1;
       continue;
@@ -205,7 +203,7 @@ void srp::ogl::ui::TextDrawString(int X, int Y, const char * String) {
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     X += s.x_advance;
-    Y += s.x_advance;
+    Y += s.y_advance;
 
     GLERR();
   }
