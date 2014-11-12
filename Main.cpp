@@ -245,6 +245,14 @@ void display_func(void) {
   srp::ogl::ui::TextDrawString(render_time_graph->GetX() + render_time_graph->GetWidth(),
                                render_time_graph->GetY() + render_time_graph->GetHeight(),
                                dispbuf);
+  {
+    float h = render_time_graph->GetSampleHeight(render_time->GetCurrent(), render_time->GetMin(), render_time->GetMax());
+    snprintf(dispbuf, DISPLAY_BUF_SIZE, "%ldns", render_time->GetMax() - render_time->GetMin());
+    srp::ogl::ui::TextDrawColor(1, 0, 0);
+    srp::ogl::ui::TextDrawString(render_time_graph->GetX() + render_time_graph->GetWidth(),
+                                 render_time_graph->GetY() + render_time_graph->GetHeight() / 2.f,
+                                 dispbuf);
+  }
 
   srp::ogl::ui::TextDrawEnd(state);
 
