@@ -12,12 +12,14 @@
 #include <stdlib.h>
 #include <string>
 #include <time.h>
+#include <stdio.h>
 
 #include "DataStore.hpp"
 #include "Tetrahedron.hpp"
 #include "RenderConfig.hpp"
 #include "RenderChunk.hpp"
 #include "Util.hpp"
+#include "metric/Metric.hpp"
 #include "ogl/OGLUtil.hpp"
 #include "ogl/Shader.hpp"
 #include "ogl/Text.hpp"
@@ -35,6 +37,7 @@ srp::ogl::ShaderProgram * basic;
 srp::ogl::ShaderProgram * textured;
 srp::ogl::VertexBuffer * axis;
 srp::ogl::TexturedVertexBuffer * face;
+srp::metric::Metric * render_time;
 
 int frame;
 int panel_z;
@@ -63,8 +66,8 @@ int main(int argc, char ** argv) {
   srp::InitializeBaseDirectory(argv[0]);
 
   dstore = new srp::DataStore(argv[1]);
-
   window = new srp::XWindow("SRP");
+  render_time = new srp::metric::Metric(128);
 
   gl_init();
 
@@ -181,7 +184,10 @@ void gl_init() {
   srp::ogl::text::TextInit(*window);
 }
 
+#define DISPLAY_BUF_SIZE 256
+
 void display_func(void) {
+  char dispbuf[DISPLAY_BUF_SIZE];
   frame += 1;
   panel_z = 0.5 * ( sin(frame / float(100)) + 1)  * dstore->GetDepth();
 
@@ -205,7 +211,9 @@ void display_func(void) {
   axis->Render(state);
 
   // DATA RENDER
+  render_time->Enter();
   chunk->Render(state);
+  render_time->Leave();
 
   // PANEL RENDER
   textured->Bind();
@@ -220,13 +228,13 @@ void display_func(void) {
   set_texture_data(*dstore, panel_z);
   face->Render(state);
 
-  srp::ogl::text::TextDrawBegin(state);
+  snprintf(dispbuf, DISPLAY_BUF_SIZE, "Average: %8.4fns|Standard Deviation: %8.4fns", render_time->GetAverage(), render_time->GetStandardDeviation());
+  srp::ogl::ui::TextDrawBegin(state);
 
-  srp::ogl::text::TextDrawColor(1, 0, 0);
-  srp::ogl::text::TextDrawString((int)(50 + 50 * sin(frame / float(64))),
-                                 (int)(50 + 50 * cos(frame / float(64))), "hello world");
+  srp::ogl::ui::TextDrawColor(0, 1, 0);
+  srp::ogl::ui::TextDrawString(5, 5, dispbuf);
 
-  srp::ogl::text::TextDrawEnd(state);
+  srp::ogl::ui::TextDrawEnd(state);
 
   // buffer swap
   window->SwapBuffers();
