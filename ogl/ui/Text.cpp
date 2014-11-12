@@ -9,7 +9,21 @@
 #include FT_FREETYPE_H
 
 #include <glm/mat4x4.hpp>
+#include <glm/vec2.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include <unordered_map>
+
+struct char_spec {
+  glm::vec2 tl;
+  glm::vec2 br;
+  int x_advance;
+  int y_advance;
+  int bm_width;
+  int bm_height;
+  int bm_left;
+  int bm_top;
+};
 
 static FT_Library library;
 static FT_Face courier;
@@ -19,11 +33,15 @@ static srp::ogl::ShaderProgram * save;
 static srp::XWindow * window;
 static bool rendering;
 
+static std::unordered_map<char, char_spec> char_cache;
+
 static GLuint texture;
 static GLuint vao;
 static GLuint data_buffer;
 
 using namespace srp::ogl::ui;
+
+#define CACHE_TEXTURE_SIZE 512
 
 void srp::ogl::ui::TextInit(srp::XWindow & Window) {
   int error;
@@ -61,8 +79,58 @@ void srp::ogl::ui::TextInit(srp::XWindow & Window) {
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+  FT_GlyphSlot g = courier->glyph;
+  int cx, cy;
+  cx = cy = 0;
+  int max_height = 0;
+  unsigned char * buffer = new unsigned char [CACHE_TEXTURE_SIZE * CACHE_TEXTURE_SIZE];
+  for (char i = 20; i < 126; ++i) {
+    if (FT_Load_Char(courier, i, FT_LOAD_RENDER)) {
+      std::cerr << "WARNING: Failed to load character " << i << std::endl;
+      continue;
+    }
+    char_spec s;
+    s.bm_top = g->bitmap_top;
+    s.bm_left = g->bitmap_left;
+    s.bm_width = g->bitmap.width;
+    s.bm_height = g->bitmap.rows;
+    s.x_advance = g->advance.x >> 6;
+    s.y_advance = g->advance.y >> 6;
+    s.tl = glm::vec2(cx / float(CACHE_TEXTURE_SIZE), cy / float(CACHE_TEXTURE_SIZE));
+    s.br = glm::vec2((cx + s.bm_width) / float(CACHE_TEXTURE_SIZE), (cy + s.bm_height) / float(CACHE_TEXTURE_SIZE));
+    char_cache.insert(std::make_pair(i, s));
+    if (s.bm_height > max_height) {
+      max_height = g->bitmap.rows;
+    }
+    if (s.bm_width + cx + 1 >= CACHE_TEXTURE_SIZE) {
+      std::cout << "wrapping on char " << (char) i << std::endl;
+      cx = 0;
+      cy += max_height + 2;
+      s.tl = glm::vec2(cx / float(CACHE_TEXTURE_SIZE), cy / float(CACHE_TEXTURE_SIZE));
+      s.br = glm::vec2((cx + s.bm_width) / float(CACHE_TEXTURE_SIZE), (cy + s.bm_height) / float(CACHE_TEXTURE_SIZE));
+      if (cy > CACHE_TEXTURE_SIZE) {
+        std::cerr << "ERROR: Ran out of space in the font cache texture" << std::endl;
+        BUG();
+      }
+    }
+    std::cout << "Char " << (char)i << " at x: " << cx << " y:" << cy << std::endl;
+    if (!(g->bitmap.buffer)) {
+      cx += s.bm_width + 1;
+      continue;
+    }
+    for (int x = 0; x < s.bm_width; ++x) {
+      for (int y = 0; y < s.bm_height; ++y) {
+        buffer[(x + cx) + CACHE_TEXTURE_SIZE * (y + cy)] = g->bitmap.buffer[x + y * s.bm_width];
+      }
+    }
+    cx += s.bm_width + 1;
+  }
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, CACHE_TEXTURE_SIZE, CACHE_TEXTURE_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, buffer);
+  delete[] buffer;
+
   glBindTexture(GL_TEXTURE_2D, 0);
+  GLERR();
 }
 
 void srp::ogl::ui::TextDrawBegin(srp::RenderState & State) {
@@ -118,48 +186,26 @@ void srp::ogl::ui::TextDrawString(int X, int Y, const char * String) {
   GLERR();
 
   for (p = String; *p; p++) {
-    if (FT_Load_Char(courier, *p, FT_LOAD_RENDER)) {
-      continue;
-    }
-    g = courier->glyph;
+    char_spec s = char_cache.find(*p)->second;
 
-    if (!(g->bitmap.buffer)) {
-      X += (g->advance.x >> 6);
-      Y += (g->advance.y >> 6);
-      continue;
-    }
-
-    glTexImage2D(
-              GL_TEXTURE_2D,
-              0,
-              GL_R8,
-              g->bitmap.width,
-              g->bitmap.rows,
-              0,
-              GL_RED,
-              GL_UNSIGNED_BYTE,
-              g->bitmap.buffer
-    );
-    GLERR();
-
-    int x2 = X + g->bitmap_left;
-    int y2 = Y + g->bitmap_top;
-    int w = g->bitmap.width;
-    int h = g->bitmap.rows;
+    int x2 = X + s.bm_left;
+    int y2 = Y + s.bm_top;
+    int w = s.bm_width;
+    int h = s.bm_height;
 
     GLfloat box[4][4] = {
-        { (GLfloat)(x2    ), (GLfloat)(y2    ), 0, 0},
-        { (GLfloat)(x2 + w), (GLfloat)(y2    ), 1, 0},
-        { (GLfloat)(x2    ), (GLfloat)(y2 - h), 0, 1},
-        { (GLfloat)(x2 + w), (GLfloat)(y2 - h), 1, 1},
+        { (GLfloat)(x2    ), (GLfloat)(y2    ), s.tl.x, s.tl.y},
+        { (GLfloat)(x2 + w), (GLfloat)(y2    ), s.br.x, s.tl.y},
+        { (GLfloat)(x2    ), (GLfloat)(y2 - h), s.tl.x, s.br.y},
+        { (GLfloat)(x2 + w), (GLfloat)(y2 - h), s.br.x, s.br.y},
     };
 
     glBufferData(GL_ARRAY_BUFFER, 4 * 4 * sizeof(GLfloat), box, GL_DYNAMIC_DRAW);
     GLERR();
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-    X += (g->advance.x >> 6);
-    Y += (g->advance.y >> 6);
+    X += s.x_advance;
+    Y += s.x_advance;
 
     GLERR();
   }
