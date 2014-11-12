@@ -27,6 +27,9 @@ namespace srp {
 
       void GetGeometry(unsigned int * OutWidth, unsigned int * OutHeight);
       void GetAttributes(XWindowAttributes * WA) const;
+
+      int GetPendingEvents();
+      void NextEvent(XEvent * Ev);
   };
 }
 

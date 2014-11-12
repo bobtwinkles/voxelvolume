@@ -88,6 +88,7 @@ XWindow::XWindow(const char * Title) {
                               0, 0, 100, 100, 0, vi->depth, InputOutput,
                               vi->visual,
                               CWBorderPixel|CWColormap|CWEventMask, &swa);
+  XSelectInput(_display, _win, KeyPressMask | PointerMotionMask | ButtonPressMask | ButtonReleaseMask);
 
   if (!_win) {
     std::cerr << "Failed to create window!" << std::endl;
@@ -99,6 +100,9 @@ XWindow::XWindow(const char * Title) {
   XStoreName( _display, _win, Title );
 
   XMapWindow( _display, _win );
+
+  Atom WM_DELETE_WINDOW = XInternAtom(_display, "WM_DELETE_WINDOW", False);
+  XSetWMProtocols(_display, _win, &WM_DELETE_WINDOW, 1);
 
   glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
   glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)
@@ -175,6 +179,14 @@ void XWindow::GetGeometry(unsigned int * OutWidth, unsigned int * OutHeight) {
 
 void XWindow::GetAttributes(XWindowAttributes * WA) const {
   XGetWindowAttributes(_display, _win, WA);
+}
+
+int XWindow::GetPendingEvents() {
+  return XPending(_display);
+}
+
+void XWindow::NextEvent(XEvent * Ev) {
+  XNextEvent(_display, Ev);
 }
 
 #define ERRBUFFER_LEN 256

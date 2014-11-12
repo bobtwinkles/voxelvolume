@@ -34,7 +34,8 @@ RenderChunk::~RenderChunk() {
   while (this->_tetrahedrons.size() > 0) {
     Tetrahedron t = this->_tetrahedrons.back();
     this->_tetrahedrons.pop_back();
-    delete &t;
+    ////for some reason this causes a double free, sounds like a thing I should track down
+    //delete &t;
   }
 }
 

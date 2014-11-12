@@ -89,6 +89,22 @@ int main(int argc, char ** argv) {
 }
 
 void process_events() {
+  XEvent xev;
+  while (window->GetPendingEvents() > 0) {
+    window->NextEvent(&xev);
+    switch(xev.type) {
+    case KeyPress:
+      std::cout << "key# " << xev.xkey.keycode << std::endl;
+      break;
+    case ClientMessage:
+      // uh... just sorta assume it's the shutdown event
+      // this will probably bite me later
+      running = false;
+      break;
+    default:
+      std::cout << "science # " << std::dec << xev.type << std::endl;
+    }
+  }
 }
 
 void main_loop() {
