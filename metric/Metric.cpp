@@ -41,18 +41,36 @@ void Metric::Leave() {
   clock_gettime(CLOCK_REALTIME, &end);
 
   long elapsed = (1000000000 * (end.tv_sec - _start.tv_sec)) + (end.tv_nsec - _start.tv_nsec);
-  if (_current_sample == 0) {
+  _current_sample = (_current_sample + 1) % _num_samples;
+  _samples[_current_sample] = elapsed;
+
+  bool should_update = true;
+  if (_current_sample != _max_sample && _current_sample != _min_sample) {
+    if (elapsed < _min) {
+      _min = elapsed;
+      _min_sample = _current_sample;
+    }
+    if (elapsed > _max) {
+      _max = elapsed;
+      _max_sample = _current_sample;
+    }
+    should_update = false;
+  } else {
     _min = LONG_MAX;
     _max = 0;
   }
-  _current_sample = (_current_sample + 1) % _num_samples;
-  _samples[_current_sample] = elapsed;
-  if (elapsed < _min) _min = elapsed;
-  if (elapsed > _max) _max = elapsed;
 
   _average = 0;
   for (auto i = 0; i < _num_samples; ++i) {
-    _average += _samples[i];
+    long samp = _samples[i];
+    _average += samp;
+    if (should_update) {
+      if (samp < _min) {
+        _min = samp;
+      } else if (samp > _max) {
+        _max = samp;
+      }
+    }
   }
   _average /= float(_num_samples);
 

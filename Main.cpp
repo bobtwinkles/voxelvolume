@@ -70,7 +70,7 @@ int main(int argc, char ** argv) {
   dstore = new srp::DataStore(argv[1]);
   window = new srp::XWindow("SRP");
   render_time = new srp::metric::Metric(128);
-  render_time_graph = new srp::ogl::ui::Graph<long>(render_time->GetData(), 128, 0, 32, 512, 100);
+  render_time_graph = new srp::ogl::ui::Graph<long>(render_time->GetData(), 128, 32, 32, 512, 100);
 
   gl_init();
 
@@ -240,7 +240,7 @@ void display_func(void) {
 
   srp::ogl::ui::TextDrawEnd(state);
 
-  render_time_graph->Render(state, render_time->GetMin(), render_time->GetMax());
+  render_time_graph->Render(state, render_time->GetCurrent(), render_time->GetMin(), render_time->GetMax());
 
   // buffer swap
   window->SwapBuffers();

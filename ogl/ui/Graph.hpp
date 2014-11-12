@@ -47,7 +47,23 @@ namespace srp {
             _y = Y;
             _width = Width;
             _height = Height;
-            _verts = new Vertex[_num_points];
+            _verts = new Vertex[_num_points + 3];
+
+            unsigned int n1 = _num_points;
+            unsigned int n2 = _num_points + 1;
+            unsigned int n3 = _num_points + 2;
+
+            _verts[n1].x = _x + _width;
+            _verts[n1].y = _y;
+            _verts[n1].r = _verts[n1].g = _verts[n1].b = 1;
+
+            _verts[n2].x = _x;
+            _verts[n2].y = _y;
+            _verts[n2].r = _verts[n2].g = _verts[n2].b = 1;
+
+            _verts[n3].x = _x;
+            _verts[n3].y = _y + _height;
+            _verts[n3].r = _verts[n3].g = _verts[n3].b = 1;
           }
 
           ~Graph() {
@@ -55,11 +71,11 @@ namespace srp {
             glDeleteVertexArrays(1, &_vao);
           }
 
-          void Render(srp::RenderState & State, T Min, T Max) const {
+          void Render(srp::RenderState & State, unsigned int Current, T Min, T Max) const {
             unsigned int w, h;
             for (auto i = 0; i < _num_points; ++i) {
               _verts[i].x = _x + (i / float(_num_points)) * _width;
-              _verts[i].y = _y + (float(_data_source[i] - Min) / float(Max)) * _height;
+              _verts[i].y = _y + (float(_data_source[(i + Current) % _num_points] - Min) / float(Max)) * _height;
               _verts[i].r = 1;
               _verts[i].g = 1;
               _verts[i].b = 1;
@@ -67,7 +83,7 @@ namespace srp {
 
             glBindVertexArray(_vao);
             glBindBuffer(GL_ARRAY_BUFFER, _data_buffer);
-            glBufferData(GL_ARRAY_BUFFER, _num_points * sizeof(Vertex), _verts, GL_DYNAMIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, (_num_points + 3) * sizeof(Vertex), _verts, GL_DYNAMIC_DRAW);
 
             UIGetWindow()->GetGeometry(&w, &h);
             glm::mat4 trans = glm::ortho(0.f, (float)w, 0.f, (float)h, 10.f, -10.f);
@@ -93,7 +109,7 @@ namespace srp {
               glVertexAttribPointer(color, 4, GL_FLOAT, false, sizeof(Vertex), (void*)(2 * sizeof(float)));
             }
 
-            glDrawArrays(GL_LINE_STRIP, 0, _num_points);
+            glDrawArrays(GL_LINE_LOOP, 0, _num_points + 3);
 
             if (position >= 0) {
               glDisableVertexAttribArray(position);

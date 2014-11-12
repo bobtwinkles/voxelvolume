@@ -35,7 +35,7 @@ void srp::ogl::ui::TextInit(srp::XWindow & Window) {
     BUG();
   }
 
-  if (FT_New_Face(library, "/usr/share/fonts/corefonts/cour.ttf", 0, &courier)) {
+  if (FT_New_Face(library, "/usr/share/fonts/dejavu/DejaVuSansMono.ttf", 0, &courier)) {
     std::cerr << "Failed to open cour.tff" << std::endl;
     BUG();
   }

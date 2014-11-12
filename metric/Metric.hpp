@@ -12,6 +12,7 @@ namespace srp {
         struct timespec _start;
         long * _samples;
         long _min, _max;
+        unsigned int _min_sample, _max_sample;
         unsigned int _current_sample;
         unsigned int _num_samples;
         bool _running;
@@ -30,6 +31,7 @@ namespace srp {
         inline long * GetData() const {return _samples;}
         inline long GetMin() const { return _min; }
         inline long GetMax() const { return _max; }
+        inline unsigned int GetCurrent() const { return _current_sample; }
     };
   }
 }
