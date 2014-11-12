@@ -71,6 +71,15 @@ namespace srp {
             glDeleteVertexArrays(1, &_vao);
           }
 
+          inline float GetX() const { return _x; }
+          inline float GetY() const { return _y; }
+          inline float GetWidth() const { return _width; }
+          inline float GetHeight() const { return _height; }
+
+          inline float GetSampleHeight(unsigned int Current, T Min, T Max) const {
+              return (float(_data_source[Current] - Min) / float(Max)) * _height;
+          }
+
           void Render(srp::RenderState & State, unsigned int Current, T Min, T Max) const {
             unsigned int w, h;
             for (auto i = 0; i < _num_points; ++i) {

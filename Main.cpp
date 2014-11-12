@@ -70,7 +70,7 @@ int main(int argc, char ** argv) {
   dstore = new srp::DataStore(argv[1]);
   window = new srp::XWindow("SRP");
   render_time = new srp::metric::Metric(128);
-  render_time_graph = new srp::ogl::ui::Graph<long>(render_time->GetData(), 128, 32, 32, 512, 100);
+  render_time_graph = new srp::ogl::ui::Graph<long>(render_time->GetData(), 128, 2, 16, 512, 100);
 
   gl_init();
 
@@ -237,6 +237,14 @@ void display_func(void) {
 
   srp::ogl::ui::TextDrawColor(0, 1, 0);
   srp::ogl::ui::TextDrawString(5, 5, dispbuf);
+  snprintf(dispbuf, DISPLAY_BUF_SIZE, "%ldns", render_time->GetMin());
+  srp::ogl::ui::TextDrawString(render_time_graph->GetX() + render_time_graph->GetWidth(),
+                               render_time_graph->GetY(),
+                               dispbuf);
+  snprintf(dispbuf, DISPLAY_BUF_SIZE, "%ldns", render_time->GetMax());
+  srp::ogl::ui::TextDrawString(render_time_graph->GetX() + render_time_graph->GetWidth(),
+                               render_time_graph->GetY() + render_time_graph->GetHeight(),
+                               dispbuf);
 
   srp::ogl::ui::TextDrawEnd(state);
 
