@@ -20,6 +20,7 @@
 #include "Util.hpp"
 #include "ogl/OGLUtil.hpp"
 #include "ogl/Shader.hpp"
+#include "ogl/Text.hpp"
 #include "ogl/VertexBuffer.hpp"
 #include "ogl/TexturedVertexBuffer.hpp"
 #include "Vec3.hpp"
@@ -50,7 +51,6 @@ void display_func(void);
 void reshape_window(void);
 void resize(int w, int h);
 void main_loop(void);
-srp::ogl::ShaderProgram * create_shader(const char* Vert, const char * Frag);
 glm::mat4 set_camera_pos_and_dir(const srp::Vec3f & Pos, const srp::Vec3f & Dir);
 static void set_texture_data(srp::DataStore & ds, int Z);
 
@@ -123,8 +123,8 @@ void gl_init() {
   GLERR();
 //  glEnable(GL_CULL_FACE);
 
-  basic = create_shader("base.vert", "base.frag");
-  textured = create_shader("texture.vert", "texture.frag");
+  basic = srp::ogl::CreateShader("base.vert", "base.frag");
+  textured = srp::ogl::CreateShader("texture.vert", "texture.frag");
 
   {
     axis = new srp::ogl::VertexBuffer(GL_LINES, GL_STATIC_DRAW);
@@ -177,6 +177,8 @@ void gl_init() {
 
   set_texture_data(*dstore, panel_z);
   GLERR();
+
+  srp::ogl::text::TextInit(*window);
 }
 
 void display_func(void) {
@@ -218,6 +220,14 @@ void display_func(void) {
   set_texture_data(*dstore, panel_z);
   face->Render(state);
 
+  srp::ogl::text::TextDrawBegin(state);
+
+  srp::ogl::text::TextDrawColor(1, 0, 0);
+  srp::ogl::text::TextDrawString((int)(50 + 50 * sin(frame / float(64))),
+                                 (int)(50 + 50 * cos(frame / float(64))), "hello world");
+
+  srp::ogl::text::TextDrawEnd(state);
+
   // buffer swap
   window->SwapBuffers();
 
@@ -249,21 +259,6 @@ glm::mat4 set_camera_pos_and_dir(const srp::Vec3f & c, const srp::Vec3f & d) {
   return glm::lookAt(glm::vec3(c.GetX(), c.GetY(), c.GetZ()),
                      glm::vec3(c.GetX() - d.GetX(), c.GetY() - d.GetY(), c.GetZ() - d.GetZ()),
                      glm::vec3(0, 1, 0));
-}
-
-srp::ogl::ShaderProgram * create_shader(const char * Vert, const char * Frag) {
-  std::shared_ptr<srp::ogl::Shader> vert(new srp::ogl::Shader(GL_VERTEX_SHADER));
-  std::shared_ptr<srp::ogl::Shader> frag(new srp::ogl::Shader(GL_FRAGMENT_SHADER));
-
-  vert->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource(Vert)));
-  frag->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource(Frag)));
-
-  srp::ogl::ShaderProgram * tr = new srp::ogl::ShaderProgram();
-  tr->AddShader(vert);
-  tr->AddShader(frag);
-  tr->Link();
-
-  return tr;
 }
 
 static void set_texture_data(srp::DataStore & ds, int Z) {

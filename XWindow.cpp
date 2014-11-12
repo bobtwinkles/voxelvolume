@@ -166,6 +166,13 @@ void XWindow::SwapBuffers() {
   glXSwapBuffers(_display, _win);
 }
 
+void XWindow::GetGeometry(unsigned int * OutWidth, unsigned int * OutHeight) {
+  Window root;
+  int x, y;
+  unsigned int border, offset;
+  XGetGeometry(_display, _win, &root, &x, &y, OutWidth, OutHeight, &border, &offset);
+}
+
 void XWindow::GetAttributes(XWindowAttributes * WA) const {
   XGetWindowAttributes(_display, _win, WA);
 }

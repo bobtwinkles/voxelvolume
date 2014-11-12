@@ -25,6 +25,7 @@ namespace srp {
 
       void SwapBuffers();
 
+      void GetGeometry(unsigned int * OutWidth, unsigned int * OutHeight);
       void GetAttributes(XWindowAttributes * WA) const;
   };
 }

@@ -177,6 +177,14 @@ void ShaderProgram::Upload(const char * Name, glm::vec3 Vec) {
   glUniform3f(loc, Vec.x, Vec.y, Vec.z);
 }
 
+void ShaderProgram::Upload(const char * Name, glm::vec4 Vec) {
+  GLint loc = FindUniform(Name);
+  if (loc < 0) {
+    return;
+  }
+  glUniform4f(loc, Vec.x, Vec.y, Vec.z, Vec.w);
+}
+
 void ShaderProgram::Upload(const char * Name, glm::mat4 Mat) {
   GLint loc = FindUniform(Name);
   if (loc < 0) {
@@ -230,9 +238,20 @@ GLint ShaderProgram::FindUniform(const char * Name) {
   return tr;
 }
 
-//std::ostream & operator<< (std::ostream & Stream, const srp::ogl::ShaderProgram & SP ) {
-//  Stream << "{ShaderProgram: [ID " << SP._sid << "]}";
-//}
+ShaderProgram * srp::ogl::CreateShader(const char * Vert, const char * Frag) {
+  std::shared_ptr<srp::ogl::Shader> vert(new srp::ogl::Shader(GL_VERTEX_SHADER));
+  std::shared_ptr<srp::ogl::Shader> frag(new srp::ogl::Shader(GL_FRAGMENT_SHADER));
+
+  vert->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource(Vert)));
+  frag->AttachSource(std::shared_ptr<srp::ogl::ShaderSource>(new srp::ogl::ShaderSource(Frag)));
+
+  srp::ogl::ShaderProgram * tr = new srp::ogl::ShaderProgram();
+  tr->AddShader(vert);
+  tr->AddShader(frag);
+  tr->Link();
+
+  return tr;
+}
 
 //////////////////////////////////////////
 //////////////////////////////////////////

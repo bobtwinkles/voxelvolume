@@ -90,12 +90,15 @@ namespace srp {
         /// Upload functions
         void Upload(const char * Name, glm::vec2 vec);
         void Upload(const char * Name, glm::vec3 vec);
+        void Upload(const char * Name, glm::vec4 vec);
         void Upload(const char * Name, glm::mat4 mat);
         void Upload(const char * Name, GLint sampler);
 
         // Fetch functions
         GLint GetAttributeLocation(const char * Name);
     };
+
+    ShaderProgram * CreateShader(const char * Vert, const char * Frag);
   }
 }
 

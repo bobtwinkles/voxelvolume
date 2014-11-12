@@ -14,8 +14,9 @@ find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(X11 REQUIRED)
 find_package(GLM REQUIRED)
+find_package(Freetype REQUIRED)
 
-include_directories(SYSTEM ${GLM_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
+include_directories(SYSTEM ${FREETYPE_INCLUDE_DIR_freetype2} ${GLM_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
 
 set (SRCS Main.cpp
           DataStore.cpp
@@ -27,10 +28,11 @@ set (SRCS Main.cpp
           ogl/Shader.cpp
           ogl/VertexBuffer.cpp
           ogl/TexturedVertexBuffer.cpp
+          ogl/Text.cpp
           )
 
 add_executable(main ${SRCS})
-target_link_libraries(main ${X11_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
+target_link_libraries(main ${FREETYPE_LIBRARIES} ${X11_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 
 include_directories("${CMAKE_SOURCE_DIR}/" "${CMAKE_SOURCE_DIR}/ogl")
 
