@@ -6,7 +6,7 @@
 
 namespace srp {
   namespace ogl {
-    namespace text {
+    namespace ui {
       void TextInit(srp::XWindow & Window);
 
       void TextDrawBegin(srp::RenderState & State);

@@ -22,9 +22,9 @@
 #include "metric/Metric.hpp"
 #include "ogl/OGLUtil.hpp"
 #include "ogl/Shader.hpp"
-#include "ogl/Text.hpp"
 #include "ogl/VertexBuffer.hpp"
 #include "ogl/TexturedVertexBuffer.hpp"
+#include "ogl/ui/Text.hpp"
 #include "Vec3.hpp"
 #include "XWindow.hpp"
 
@@ -181,7 +181,7 @@ void gl_init() {
   set_texture_data(*dstore, panel_z);
   GLERR();
 
-  srp::ogl::text::TextInit(*window);
+  srp::ogl::ui::TextInit(*window);
 }
 
 #define DISPLAY_BUF_SIZE 256

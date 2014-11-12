@@ -29,7 +29,7 @@ set (SRCS Main.cpp
           ogl/Shader.cpp
           ogl/VertexBuffer.cpp
           ogl/TexturedVertexBuffer.cpp
-          ogl/Text.cpp
+          ogl/ui/Text.cpp
           )
 
 add_executable(main ${SRCS})

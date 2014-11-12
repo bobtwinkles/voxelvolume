@@ -22,9 +22,9 @@ static GLuint texture;
 static GLuint vao;
 static GLuint data_buffer;
 
-using namespace srp::ogl::text;
+using namespace srp::ogl::ui;
 
-void srp::ogl::text::TextInit(srp::XWindow & Window) {
+void srp::ogl::ui::TextInit(srp::XWindow & Window) {
   int error;
 
   error = FT_Init_FreeType(&library);
@@ -64,7 +64,7 @@ void srp::ogl::text::TextInit(srp::XWindow & Window) {
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void srp::ogl::text::TextDrawBegin(srp::RenderState & State) {
+void srp::ogl::ui::TextDrawBegin(srp::RenderState & State) {
   save = State.GetCurrentShaderProgram();
   State.SetCurrentShader(text_shader);
   text_shader->Bind();
@@ -74,7 +74,7 @@ void srp::ogl::text::TextDrawBegin(srp::RenderState & State) {
   TextDrawColor(1, 1, 1);
 }
 
-void srp::ogl::text::TextDrawColor(float R, float G, float B) {
+void srp::ogl::ui::TextDrawColor(float R, float G, float B) {
   if (!rendering) {
     std::cerr << "tried to set text color outside of text rending mode!" << std::endl
               << "You should call TextDrawBegin/TextDrawEnd" << std::endl;
@@ -83,7 +83,7 @@ void srp::ogl::text::TextDrawColor(float R, float G, float B) {
   text_shader->Upload("color", glm::vec4(R, G, B, 1));
 }
 
-void srp::ogl::text::TextDrawString(int X, int Y, const char * String) {
+void srp::ogl::ui::TextDrawString(int X, int Y, const char * String) {
   glm::mat4 trans;
   const char * p;
   unsigned int w, h;
@@ -170,7 +170,7 @@ void srp::ogl::text::TextDrawString(int X, int Y, const char * String) {
   GLERR();
 }
 
-void srp::ogl::text::TextDrawEnd(srp::RenderState & State) {
+void srp::ogl::ui::TextDrawEnd(srp::RenderState & State) {
   State.SetCurrentShader(save);
   if (save != 0) {
     save->Bind();
