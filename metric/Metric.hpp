@@ -27,6 +27,9 @@ namespace srp {
 
         float GetAverage() const;
         float GetStandardDeviation() const;
+        inline long * GetData() const {return _samples;}
+        inline long GetMin() const { return _min; }
+        inline long GetMax() const { return _max; }
     };
   }
 }

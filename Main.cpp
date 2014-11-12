@@ -25,6 +25,7 @@
 #include "ogl/VertexBuffer.hpp"
 #include "ogl/TexturedVertexBuffer.hpp"
 #include "ogl/ui/Text.hpp"
+#include "ogl/ui/Graph.hpp"
 #include "Vec3.hpp"
 #include "XWindow.hpp"
 
@@ -38,6 +39,7 @@ srp::ogl::ShaderProgram * textured;
 srp::ogl::VertexBuffer * axis;
 srp::ogl::TexturedVertexBuffer * face;
 srp::metric::Metric * render_time;
+srp::ogl::ui::Graph<long> * render_time_graph;
 
 int frame;
 int panel_z;
@@ -68,6 +70,7 @@ int main(int argc, char ** argv) {
   dstore = new srp::DataStore(argv[1]);
   window = new srp::XWindow("SRP");
   render_time = new srp::metric::Metric(128);
+  render_time_graph = new srp::ogl::ui::Graph<long>(render_time->GetData(), 128, 0, 32, 512, 100);
 
   gl_init();
 
@@ -182,6 +185,7 @@ void gl_init() {
   GLERR();
 
   srp::ogl::ui::TextInit(*window);
+  srp::ogl::ui::UIInit(*window);
 }
 
 #define DISPLAY_BUF_SIZE 256
@@ -235,6 +239,8 @@ void display_func(void) {
   srp::ogl::ui::TextDrawString(5, 5, dispbuf);
 
   srp::ogl::ui::TextDrawEnd(state);
+
+  render_time_graph->Render(state, render_time->GetMin(), render_time->GetMax());
 
   // buffer swap
   window->SwapBuffers();

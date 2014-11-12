@@ -41,6 +41,10 @@ void Metric::Leave() {
   clock_gettime(CLOCK_REALTIME, &end);
 
   long elapsed = (1000000000 * (end.tv_sec - _start.tv_sec)) + (end.tv_nsec - _start.tv_nsec);
+  if (_current_sample == 0) {
+    _min = LONG_MAX;
+    _max = 0;
+  }
   _current_sample = (_current_sample + 1) % _num_samples;
   _samples[_current_sample] = elapsed;
   if (elapsed < _min) _min = elapsed;

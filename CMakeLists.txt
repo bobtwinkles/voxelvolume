@@ -30,6 +30,7 @@ set (SRCS Main.cpp
           ogl/VertexBuffer.cpp
           ogl/TexturedVertexBuffer.cpp
           ogl/ui/Text.cpp
+          ogl/ui/UI.cpp
           )
 
 add_executable(main ${SRCS})

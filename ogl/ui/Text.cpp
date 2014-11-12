@@ -15,6 +15,7 @@ static FT_Library library;
 static FT_Face courier;
 static srp::ogl::ShaderProgram * text_shader;
 static srp::ogl::ShaderProgram * save;
+// TODO: refactor this out into UI.cpp, for now it's duplicated
 static srp::XWindow * window;
 static bool rendering;
 
