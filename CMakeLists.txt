@@ -29,6 +29,7 @@ set (SRCS Main.cpp
           ogl/Shader.cpp
           ogl/VertexBuffer.cpp
           ogl/TexturedVertexBuffer.cpp
+          ogl/ui/Graph.cpp
           ogl/ui/Text.cpp
           ogl/ui/UI.cpp
           )
@@ -36,7 +37,10 @@ set (SRCS Main.cpp
 add_executable(main ${SRCS})
 target_link_libraries(main ${FREETYPE_LIBRARIES} ${X11_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 
-include_directories("${CMAKE_SOURCE_DIR}/" "${CMAKE_SOURCE_DIR}/ogl")
+include_directories("${CMAKE_SOURCE_DIR}/"
+                    "${CMAKE_SOURCE_DIR}/ogl"
+                    "${CMAKE_SOURCE_DIR}/ogl/ui"
+                    "${CMAKE_SOURCE_DIR}/metric")
 
 if(GLUT_FOUND)
   include_directories(SYSTEM ${GLUT_INCLUDE_DIRS})

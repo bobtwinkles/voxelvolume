@@ -2,5 +2,7 @@
 -I /usr/include/GL
 -I /usr/include/GLUT
 -I /usr/include/freetype2
+-I ./metric
+-I ./ogl/ui
 -I ./ogl/
 -I ./

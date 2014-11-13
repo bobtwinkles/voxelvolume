@@ -17,10 +17,26 @@ Metric::Metric(unsigned int NumSamples) {
   for (auto i = 0; i < _num_samples; ++i) {
     _samples[i] = 0;
   }
+  _total_samples = 0;
 }
 
 Metric::~Metric() {
   delete[] _samples;
+}
+
+void Metric::Reset() {
+  if (_running) {
+    std::cerr << "Tried to reset a running metric" << std::endl;
+    BUG();
+  }
+
+  _min = LONG_MAX;
+  _max = 0;
+  for (auto i = 0; i < _num_samples; ++i) {
+    _samples[i] = 0;
+  }
+  _current_sample = 0;
+  _total_samples = 0;
 }
 
 void Metric::Enter() {
@@ -44,32 +60,33 @@ void Metric::Leave() {
   _current_sample = (_current_sample + 1) % _num_samples;
   _samples[_current_sample] = elapsed;
 
-  bool should_update = true;
-  if (_current_sample != _max_sample && _current_sample != _min_sample) {
-    if (elapsed < _min) {
-      _min = elapsed;
-      _min_sample = _current_sample;
-    }
-    if (elapsed > _max) {
-      _max = elapsed;
-      _max_sample = _current_sample;
-    }
-    should_update = false;
-  } else {
-    _min = LONG_MAX;
-    _max = 0;
+  if (_seeing_max_sample == _current_sample) {
+    _seeing_max = 0;
   }
+
+  if (elapsed < _min) {
+    _min = elapsed;
+  }
+  if (elapsed > _max) {
+    _max = elapsed;
+    _seeing_max = elapsed;
+    _seeing_max_sample = _current_sample;
+  }
+
+  if (_continous_average == 0) {
+    _continous_average = elapsed;
+  } else {
+    _continous_average = ( (_continous_average * _total_samples) + elapsed ) / float(_total_samples + 1);
+  }
+  _total_samples += 1;
 
   _average = 0;
   for (auto i = 0; i < _num_samples; ++i) {
     long samp = _samples[i];
     _average += samp;
-    if (should_update) {
-      if (samp < _min) {
-        _min = samp;
-      } else if (samp > _max) {
-        _max = samp;
-      }
+    if (samp > _seeing_max) {
+      _seeing_max = samp;
+      _seeing_max_sample = i;
     }
   }
   _average /= float(_num_samples);
@@ -82,11 +99,11 @@ void Metric::Leave() {
   _stddev /= float(_num_samples) - 1;
   _stddev = sqrtf(_stddev);
 
-  _running = false;
-}
+  if (_max > _seeing_max) {
+    _max = long(0.99 * (_max - _seeing_max) + _seeing_max);
+  }
 
-float Metric::GetAverage() const {
-  return _average;
+  _running = false;
 }
 
 float Metric::GetStandardDeviation() const {

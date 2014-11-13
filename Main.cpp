@@ -39,7 +39,7 @@ srp::ogl::ShaderProgram * textured;
 srp::ogl::VertexBuffer * axis;
 srp::ogl::TexturedVertexBuffer * face;
 srp::metric::Metric * render_time;
-srp::ogl::ui::Graph<long> * render_time_graph;
+srp::ogl::ui::MetricGraph * render_time_graph;
 
 int frame;
 int panel_z;
@@ -70,7 +70,7 @@ int main(int argc, char ** argv) {
   dstore = new srp::DataStore(argv[1]);
   window = new srp::XWindow("SRP");
   render_time = new srp::metric::Metric(128);
-  render_time_graph = new srp::ogl::ui::Graph<long>(render_time->GetData(), 128, 2, 16, 512, 100);
+  render_time_graph = new srp::ogl::ui::MetricGraph(*render_time, 2, 16, 512, 100);
 
   gl_init();
 
@@ -195,6 +195,11 @@ void display_func(void) {
   frame += 1;
   panel_z = 0.5 * ( sin(frame / float(100)) + 1)  * dstore->GetDepth();
 
+  // give a few frames for the system to warm up
+  if (frame == 3) {
+    render_time->Reset();
+  }
+
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
   GLERR();
 
@@ -243,20 +248,19 @@ void display_func(void) {
                                dispbuf);
   snprintf(dispbuf, DISPLAY_BUF_SIZE, "%ldns", render_time->GetMax());
   srp::ogl::ui::TextDrawString(render_time_graph->GetX() + render_time_graph->GetWidth(),
-                               render_time_graph->GetY() + render_time_graph->GetHeight(),
+                               render_time_graph->GetY() + render_time_graph->GetSampleHeight(render_time->GetMax()),
                                dispbuf);
   {
-    float h = render_time_graph->GetSampleHeight(render_time->GetCurrent(), render_time->GetMin(), render_time->GetMax());
-    snprintf(dispbuf, DISPLAY_BUF_SIZE, "%ldns", render_time->GetMax() - render_time->GetMin());
+    snprintf(dispbuf, DISPLAY_BUF_SIZE, "%8.4fns", render_time->GetAverage());
     srp::ogl::ui::TextDrawColor(1, 0, 0);
     srp::ogl::ui::TextDrawString(render_time_graph->GetX() + render_time_graph->GetWidth(),
-                                 render_time_graph->GetY() + render_time_graph->GetHeight() / 2.f,
+                                 render_time_graph->GetY() + render_time_graph->GetSampleHeight(render_time->GetAverage()),
                                  dispbuf);
   }
 
   srp::ogl::ui::TextDrawEnd(state);
 
-  render_time_graph->Render(state, render_time->GetCurrent(), render_time->GetMin(), render_time->GetMax());
+  render_time_graph->Render(state);
 
   // buffer swap
   window->SwapBuffers();
