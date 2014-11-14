@@ -11,7 +11,7 @@
 
 namespace srp {
   namespace metric {
-    class Metric;
+    class GPUMetric;
   }
 
   namespace ogl {
@@ -25,7 +25,7 @@ namespace srp {
 
           // Data spec
           unsigned int _num_points;
-          srp::metric::Metric & _metric;
+          srp::metric::GPUMetric & _metric;
 
           // Opengl stuff
           GLuint _data_buffer;
@@ -46,7 +46,7 @@ namespace srp {
 
           DISALLOW_COPY_AND_ASSIGN(MetricGraph);
         public:
-          MetricGraph(srp::metric::Metric & Metric, float X, float Y, float Width, float Height);
+          MetricGraph(srp::metric::GPUMetric & Metric, float X, float Y, float Width, float Height);
           ~MetricGraph();
 
           inline float GetX() const { return _x; }

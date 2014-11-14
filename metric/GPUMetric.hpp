@@ -12,7 +12,7 @@ namespace srp {
     }
   }
   namespace metric {
-    class Metric {
+    class GPUMetric {
       private:
         friend srp::ogl::ui::MetricGraph;
         struct timespec _start;
@@ -26,10 +26,10 @@ namespace srp {
         bool _running;
         float _average, _stddev, _continous_average;
 
-        DISALLOW_COPY_AND_ASSIGN(Metric);
+        DISALLOW_COPY_AND_ASSIGN(GPUMetric);
       public:
-        Metric(unsigned int NumSamples);
-        ~Metric();
+        GPUMetric(unsigned int NumSamples);
+        ~GPUMetric();
 
         void Enter();
         void Leave();

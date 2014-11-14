@@ -25,7 +25,7 @@ set (SRCS Main.cpp
           Tetrahedron.cpp
           Util.cpp
           XWindow.cpp
-          metric/Metric.cpp
+          metric/GPUMetric.cpp
           ogl/Shader.cpp
           ogl/VertexBuffer.cpp
           ogl/TexturedVertexBuffer.cpp

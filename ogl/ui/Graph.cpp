@@ -1,13 +1,13 @@
 #include "Graph.hpp"
 
-#include "Metric.hpp"
+#include "GPUMetric.hpp"
 #include <math.h>
 
 using srp::ogl::ui::MetricGraph;
 
 #define METRICGRAPH_SCALE (_metric._max - _metric._min)
 
-MetricGraph::MetricGraph(srp::metric::Metric & Metric, float X, float Y, float Width, float Height) : _metric(Metric) {
+MetricGraph::MetricGraph(srp::metric::GPUMetric & Metric, float X, float Y, float Width, float Height) : _metric(Metric) {
   _num_points = _metric._num_samples;
 
   glGenVertexArrays(1, &_vao);

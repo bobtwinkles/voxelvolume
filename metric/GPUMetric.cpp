@@ -1,11 +1,11 @@
-#include "Metric.hpp"
+#include "GPUMetric.hpp"
 
 #include <limits.h>
 #include <math.h>
 
-using srp::metric::Metric;
+using srp::metric::GPUMetric;
 
-Metric::Metric(unsigned int NumSamples) {
+GPUMetric::GPUMetric(unsigned int NumSamples) {
   _min = LONG_MAX;
   _max = 0;
   _current_sample = 0;
@@ -21,11 +21,11 @@ Metric::Metric(unsigned int NumSamples) {
   _continous_average = 0;
 }
 
-Metric::~Metric() {
+GPUMetric::~GPUMetric() {
   delete[] _samples;
 }
 
-void Metric::Reset() {
+void GPUMetric::Reset() {
   if (_running) {
     std::cerr << "Tried to reset a running metric" << std::endl;
     BUG();
@@ -40,7 +40,7 @@ void Metric::Reset() {
   _total_samples = 0;
 }
 
-void Metric::Enter() {
+void GPUMetric::Enter() {
   if (_running) {
     std::cerr << "Tried to start an already running metric!" << std::endl;
     BUG();
@@ -49,7 +49,7 @@ void Metric::Enter() {
   _running = true;
 }
 
-void Metric::Leave() {
+void GPUMetric::Leave() {
   struct timespec end;
   if (!_running) {
     std::cerr << "Tried to leave a metric that isn't running!" << std::endl;
@@ -107,6 +107,6 @@ void Metric::Leave() {
   _running = false;
 }
 
-float Metric::GetStandardDeviation() const {
+float GPUMetric::GetStandardDeviation() const {
   return _stddev;
 }

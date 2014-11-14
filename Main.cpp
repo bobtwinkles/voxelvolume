@@ -19,7 +19,7 @@
 #include "RenderConfig.hpp"
 #include "RenderChunk.hpp"
 #include "Util.hpp"
-#include "metric/Metric.hpp"
+#include "metric/GPUMetric.hpp"
 #include "ogl/OGLUtil.hpp"
 #include "ogl/Shader.hpp"
 #include "ogl/VertexBuffer.hpp"
@@ -38,7 +38,7 @@ srp::ogl::ShaderProgram * textured;
 srp::ogl::VertexBuffer * axis;
 srp::ogl::VertexBuffer * rendered_data;
 srp::ogl::TexturedVertexBuffer * face;
-srp::metric::Metric * render_time;
+srp::metric::GPUMetric * render_time;
 srp::ogl::ui::MetricGraph * render_time_graph;
 
 int frame;
@@ -73,7 +73,7 @@ int main(int argc, char ** argv) {
 
   dstore = new srp::DataStore(argv[1]);
   window = new srp::XWindow("SRP");
-  render_time = new srp::metric::Metric(128);
+  render_time = new srp::metric::GPUMetric(128);
   render_time_graph = new srp::ogl::ui::MetricGraph(*render_time, 2, 16, 512, 100);
 
   gl_init();
