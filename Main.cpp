@@ -31,8 +31,8 @@
 
 srp::DataStore * dstore;
 
-srp::RenderState state(2500);
-srp::RenderChunk * chunk;
+srp::RenderState state(1500);
+srp::RenderChunk ** chunks;
 srp::XWindow * window;
 srp::ogl::ShaderProgram * basic;
 srp::ogl::ShaderProgram * textured;
@@ -43,6 +43,10 @@ srp::ogl::ui::MetricGraph * render_time_graph;
 
 int frame;
 int panel_z;
+
+unsigned int x_chunks;
+unsigned int y_chunks;
+unsigned int z_chunks;
 
 int last_width, last_height;
 
@@ -74,7 +78,18 @@ int main(int argc, char ** argv) {
 
   gl_init();
 
-  chunk = new srp::RenderChunk(*dstore, 2, 3, 2);
+  x_chunks = dstore->GetWidth() / RENDER_CHUNK_SIZE;
+  y_chunks = dstore->GetHeight() / RENDER_CHUNK_SIZE;
+  z_chunks = dstore->GetDepth() / RENDER_CHUNK_SIZE;
+
+  chunks = new srp::RenderChunk*[3 * 3 * 3];
+  for (auto x = 0; x < x_chunks; ++x) {
+    for (auto y = 0; y < y_chunks; ++y) {
+      for (auto z = 0; z < z_chunks; ++z) {
+        chunks[x + y * x_chunks + z * x_chunks * y_chunks] = new srp::RenderChunk(*dstore, x, y, z);
+      }
+    }
+  }
 
   std::cout << "main loop" << std::endl;
 
@@ -83,7 +98,14 @@ int main(int argc, char ** argv) {
 
   std::cout << "cleaning up" << std::endl;
 
-  delete chunk;
+  for (auto x = 0; x < x_chunks; ++x) {
+    for (auto y = 0; y < y_chunks; ++y) {
+      for (auto z = 0; z < z_chunks; ++z) {
+        delete chunks[x + y * x_chunks + z * x_chunks * y_chunks];
+      }
+    }
+  }
+  delete[] chunks;
   delete dstore;
   delete window;
 }
@@ -240,7 +262,13 @@ void display_func(void) {
 
   // DATA RENDER
   render_time->Enter();
-  chunk->Render(state);
+  for (auto x = 0; x < x_chunks; ++x) {
+    for (auto y = 0; y < y_chunks; ++y) {
+      for (auto z = 0; z < z_chunks; ++z) {
+        chunks[x + y * x_chunks + z * x_chunks * y_chunks]->Render(state);
+      }
+    }
+  }
   render_time->Leave();
 
   // PANEL RENDER
