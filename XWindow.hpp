@@ -28,8 +28,11 @@ namespace srp {
       void GetGeometry(unsigned int * OutWidth, unsigned int * OutHeight);
       void GetAttributes(XWindowAttributes * WA) const;
 
-      int GetPendingEvents();
-      void NextEvent(XEvent * Ev);
+      int GetPendingEvents() const;
+      void NextEvent(XEvent * Ev) const;
+
+      KeyCode KeyCodeFromKeySym(KeySym) const;
+      KeySym KeySymFromKeyCode(KeyCode) const;
   };
 }
 

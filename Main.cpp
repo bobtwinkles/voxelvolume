@@ -90,11 +90,16 @@ int main(int argc, char ** argv) {
 
 void process_events() {
   XEvent xev;
+  int key;
   while (window->GetPendingEvents() > 0) {
     window->NextEvent(&xev);
     switch(xev.type) {
     case KeyPress:
-      std::cout << "key# " << xev.xkey.keycode << std::endl;
+      key = window->KeySymFromKeyCode(xev.xkey.keycode);
+      switch (key) {
+        case 'c': render_time->Reset(); break;
+        default: break;
+      }
       break;
     case ClientMessage:
       // uh... just sorta assume it's the shutdown event
@@ -102,7 +107,7 @@ void process_events() {
       running = false;
       break;
     default:
-      std::cout << "science # " << std::dec << xev.type << std::endl;
+      break;
     }
   }
 }
@@ -213,11 +218,6 @@ void display_func(void) {
   char dispbuf[DISPLAY_BUF_SIZE];
   frame += 1;
   panel_z = 0.5 * ( sin(frame / float(100)) + 1)  * dstore->GetDepth();
-
-  // give a few frames for the system to warm up
-  if (frame == 3) {
-    render_time->Reset();
-  }
 
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
   GLERR();

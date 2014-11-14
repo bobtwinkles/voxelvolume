@@ -181,12 +181,20 @@ void XWindow::GetAttributes(XWindowAttributes * WA) const {
   XGetWindowAttributes(_display, _win, WA);
 }
 
-int XWindow::GetPendingEvents() {
+int XWindow::GetPendingEvents() const {
   return XPending(_display);
 }
 
-void XWindow::NextEvent(XEvent * Ev) {
+void XWindow::NextEvent(XEvent * Ev) const {
   XNextEvent(_display, Ev);
+}
+
+KeyCode XWindow::KeyCodeFromKeySym(KeySym K) const {
+  return XKeysymToKeycode(_display, K);
+}
+
+KeySym XWindow::KeySymFromKeyCode(KeyCode K) const {
+  return XKeycodeToKeysym(_display, K, 0);
 }
 
 #define ERRBUFFER_LEN 256
