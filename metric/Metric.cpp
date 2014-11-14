@@ -18,6 +18,7 @@ Metric::Metric(unsigned int NumSamples) {
     _samples[i] = 0;
   }
   _total_samples = 0;
+  _continous_average = 0;
 }
 
 Metric::~Metric() {
