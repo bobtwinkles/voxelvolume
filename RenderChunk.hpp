@@ -12,29 +12,8 @@
 #include <GL/gl.h>
 
 namespace srp {
-  class RenderChunk {
-    private:
-      typedef std::vector<srp::Tetrahedron> TetrahedronList;
-
-      srp::DataStore & _ds;
-
-      int _x, _y, _z;
-
-      srp::ogl::VertexBuffer _buffer;
-
-      std::vector<srp::Tetrahedron> _tetrahedrons;
-
-      srp::RenderState _last_state;
-
-      DISALLOW_COPY_AND_ASSIGN(RenderChunk);
-    public:
-      // X, Y, and Z are in chunk coordinates
-      RenderChunk(srp::DataStore & store, int X, int Y, int Z);
-      ~RenderChunk();
-
-      void Update(srp::RenderState & State);
-      void Render(srp::RenderState & State);
-  };
+  void RenderChunk(srp::DataStore & Store, int X, int Y, int Z, unsigned int Threshold,
+                   srp::IndexCache & Cache, std::vector<GLuint> & Indicies, std::vector<srp::ogl::Vertex> & Verts);
 }
 
 #endif

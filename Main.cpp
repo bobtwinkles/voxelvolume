@@ -31,12 +31,12 @@
 
 srp::DataStore * dstore;
 
-srp::RenderState state(1500);
-srp::RenderChunk ** chunks;
+srp::RenderState state(3000);
 srp::XWindow * window;
 srp::ogl::ShaderProgram * basic;
 srp::ogl::ShaderProgram * textured;
 srp::ogl::VertexBuffer * axis;
+srp::ogl::VertexBuffer * rendered_data;
 srp::ogl::TexturedVertexBuffer * face;
 srp::metric::Metric * render_time;
 srp::ogl::ui::MetricGraph * render_time_graph;
@@ -78,18 +78,30 @@ int main(int argc, char ** argv) {
 
   gl_init();
 
-  x_chunks = dstore->GetWidth() / RENDER_CHUNK_SIZE;
-  y_chunks = dstore->GetHeight() / RENDER_CHUNK_SIZE;
-  z_chunks = dstore->GetDepth() / RENDER_CHUNK_SIZE;
+  x_chunks = 1 + dstore->GetWidth() / RENDER_CHUNK_SIZE;
+  y_chunks = 1 + dstore->GetHeight() / RENDER_CHUNK_SIZE;
+  z_chunks = 1 + dstore->GetDepth() / RENDER_CHUNK_SIZE;
 
-  chunks = new srp::RenderChunk*[3 * 3 * 3];
+  srp::IndexCache * cache = new srp::IndexCache();
+  std::vector<GLuint> * indicies = new std::vector<GLuint>();
+  std::vector<srp::ogl::Vertex> * verts = new std::vector<srp::ogl::Vertex>();
+
   for (auto x = 0; x < x_chunks; ++x) {
     for (auto y = 0; y < y_chunks; ++y) {
       for (auto z = 0; z < z_chunks; ++z) {
-        chunks[x + y * x_chunks + z * x_chunks * y_chunks] = new srp::RenderChunk(*dstore, x, y, z);
+        printf("Building chunk: %2d %2d %2d\n", x, y, z);
+        srp::RenderChunk(*dstore, x, y, z, state.GetThreshold(), *cache, *indicies, *verts);
       }
     }
   }
+
+  rendered_data = new srp::ogl::VertexBuffer(GL_TRIANGLES, GL_STATIC_DRAW);
+  rendered_data->ReplaceData(*verts, *indicies);
+  rendered_data->Sync();
+
+  delete cache;
+  delete indicies;
+  delete verts;
 
   std::cout << "main loop" << std::endl;
 
@@ -98,14 +110,6 @@ int main(int argc, char ** argv) {
 
   std::cout << "cleaning up" << std::endl;
 
-  for (auto x = 0; x < x_chunks; ++x) {
-    for (auto y = 0; y < y_chunks; ++y) {
-      for (auto z = 0; z < z_chunks; ++z) {
-        delete chunks[x + y * x_chunks + z * x_chunks * y_chunks];
-      }
-    }
-  }
-  delete[] chunks;
   delete dstore;
   delete window;
 }
@@ -262,13 +266,7 @@ void display_func(void) {
 
   // DATA RENDER
   render_time->Enter();
-  for (auto x = 0; x < x_chunks; ++x) {
-    for (auto y = 0; y < y_chunks; ++y) {
-      for (auto z = 0; z < z_chunks; ++z) {
-        chunks[x + y * x_chunks + z * x_chunks * y_chunks]->Render(state);
-      }
-    }
-  }
+  rendered_data->Render(state);
   render_time->Leave();
 
   // PANEL RENDER

@@ -16,12 +16,12 @@ namespace srp {
     private:
       Vec3i _corners[4];
 
-      Vec3f _edges[6];
-
     public:
+      Tetrahedron();
       Tetrahedron(Vec3i P1, Vec3i P2, Vec3i P3, Vec3i P4);
+      Tetrahedron & operator=(const Tetrahedron & Other);
 
-      void Render(srp::DataStore & ds, RenderState & State, std::vector<GLuint> &, srp::IndexCache &, std::vector<srp::ogl::Vertex> &);
+      void Render(srp::DataStore & ds, unsigned int Threshold, std::vector<GLuint> &, srp::IndexCache &, std::vector<srp::ogl::Vertex> &);
 
       /// Returns the set of points which are above the threshold
       ///
@@ -38,7 +38,7 @@ namespace srp {
   /// @param Y The Y coordinate of the cube
   /// @param Z The Z coordinate of the cube
   /// @param Base an array of Tetrahedrons with at least 6 elements remaining.
-  Tetrahedron ** BuildForCube(int X, int Y, int Z, Tetrahedron ** Base);
+  Tetrahedron * BuildForCube(int X, int Y, int Z, Tetrahedron * Base);
 }
 
 #endif

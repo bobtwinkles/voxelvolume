@@ -22,6 +22,25 @@ Tetrahedron::Tetrahedron(Vec3i P1, Vec3i P2, Vec3i P3, Vec3i P4) {
   _corners[3] = P4;
 }
 
+Tetrahedron::Tetrahedron() {
+  _corners[0] = srp::Vec3i(0, 0, 0);
+  _corners[1] = srp::Vec3i(0, 1, 0);
+  _corners[2] = srp::Vec3i(0, 0, 1);
+  _corners[3] = srp::Vec3i(0, 1, 1);
+}
+
+Tetrahedron & Tetrahedron::operator=(const Tetrahedron & Other) {
+  if (this == &Other) {
+    return *this;
+  }
+  _corners[0] = Other._corners[0];
+  _corners[1] = Other._corners[1];
+  _corners[2] = Other._corners[2];
+  _corners[3] = Other._corners[3];
+
+  return *this;
+}
+
 int EDGE_MAP[6][2] = {{ 0, 1 }
                      ,{ 0, 2 }
                      ,{ 0, 3 }
@@ -91,19 +110,14 @@ static float inverse_lerp_factor(unsigned int A, unsigned int B, unsigned int Va
 }
 
 void Tetrahedron::Render(DataStore & DS,
-                         RenderState & State,
+                         unsigned int Threshold,
                          std::vector<GLuint> & Indicies,
                          srp::IndexCache & Cache,
                          std::vector<srp::ogl::Vertex> & VertexData) {
   Vec3f edges[6];
   bool edges_seen[6] = {false, false, false, false, false, false};
-  unsigned char tri = GetState(DS, State.GetThreshold());
+  unsigned char tri = GetState(DS, Threshold);
 
-  //glColor3f(_corners[0].GetX()/(float)RENDER_CHUNK_SIZE,
-  //          _corners[0].GetY()/(float)RENDER_CHUNK_SIZE,
-  //          _corners[0].GetZ()/(float)RENDER_CHUNK_SIZE);
-  //glColor3f(TRI_COLORS[tri][0], TRI_COLORS[tri][1], TRI_COLORS[tri][2]);
-  //glColor3f(EDGE_COLORS[_index][0], EDGE_COLORS[_index][1], EDGE_COLORS[_index][2]);
   for (int i = 0; i < 6; ++i) {
     int edge = TRIANGLE_MAP[tri][i];
     if (edge == -1) {
@@ -114,7 +128,7 @@ void Tetrahedron::Render(DataStore & DS,
       Vec3i b = _corners[EDGE_MAP[edge][1]];
       float fac = inverse_lerp_factor(DS.GetPoint(a)
                                      ,DS.GetPoint(b)
-                                     ,State.GetThreshold());
+                                     ,Threshold);
       edges[edge] = Vec3f(fac * a.GetX() + (1 - fac) * b.GetX()
                          ,fac * a.GetY() + (1 - fac) * b.GetY()
                          ,fac * a.GetZ() + (1 - fac) * b.GetZ());
@@ -127,9 +141,6 @@ void Tetrahedron::Render(DataStore & DS,
         v.r = v.x / 256.f;
         v.g = v.y / 256.f;
         v.b = v.z / 256.f;
-        // v.nx = v.ny = v.nz = 0;
-        // v.u = 0;
-        // v.v = 0;
         creation_index = VertexData.size();
         Cache.insert(std::make_pair(edges[edge], creation_index));
         VertexData.push_back(v);
@@ -137,12 +148,6 @@ void Tetrahedron::Render(DataStore & DS,
     }
 
     Indicies.push_back(Cache.find(edges[edge])->second);
-//    Vec3f point = edges[edge];
-//    glColor3f(EDGE_COLORS[edge][0], EDGE_COLORS[edge][1], EDGE_COLORS[edge][2]);
-//    glColor3f(point.GetX() / 256.f
-//             ,point.GetY() / 256.f
-//             ,point.GetZ() / 256.f);
-//    glVertex3f(point.GetX(), point.GetY(), point.GetZ());
   }
 }
 
@@ -170,12 +175,12 @@ Tetrahedron &Tetrahedron::operator= (Tetrahedron & Other) {
   return *this;
 }
 
-Tetrahedron ** srp::BuildForCube(int X, int Y, int Z, Tetrahedron ** Base) {
-  Base[0] = new Tetrahedron(Vec3i(X + 0, Y + 0, Z + 0), Vec3i(X + 0, Y + 1, Z + 0), Vec3i(X + 0, Y + 1, Z + 1), Vec3i(X + 1, Y + 1, Z + 0));
-  Base[1] = new Tetrahedron(Vec3i(X + 0, Y + 0, Z + 0), Vec3i(X + 0, Y + 0, Z + 1), Vec3i(X + 0, Y + 1, Z + 1), Vec3i(X + 1, Y + 1, Z + 0));
-  Base[2] = new Tetrahedron(Vec3i(X + 0, Y + 0, Z + 1), Vec3i(X + 0, Y + 0, Z + 0), Vec3i(X + 1, Y + 0, Z + 0), Vec3i(X + 1, Y + 1, Z + 0));
-  Base[3] = new Tetrahedron(Vec3i(X + 0, Y + 0, Z + 1), Vec3i(X + 0, Y + 1, Z + 1), Vec3i(X + 1, Y + 1, Z + 0), Vec3i(X + 1, Y + 1, Z + 1));
-  Base[4] = new Tetrahedron(Vec3i(X + 0, Y + 0, Z + 1), Vec3i(X + 1, Y + 0, Z + 0), Vec3i(X + 1, Y + 1, Z + 0), Vec3i(X + 1, Y + 1, Z + 1));
-  Base[5] = new Tetrahedron(Vec3i(X + 0, Y + 0, Z + 1), Vec3i(X + 1, Y + 0, Z + 0), Vec3i(X + 1, Y + 0, Z + 1), Vec3i(X + 1, Y + 1, Z + 1));
+Tetrahedron * srp::BuildForCube(int X, int Y, int Z, Tetrahedron * Base) {
+  Base[0] = Tetrahedron(Vec3i(X + 0, Y + 0, Z + 0), Vec3i(X + 0, Y + 1, Z + 0), Vec3i(X + 0, Y + 1, Z + 1), Vec3i(X + 1, Y + 1, Z + 0));
+  Base[1] = Tetrahedron(Vec3i(X + 0, Y + 0, Z + 0), Vec3i(X + 0, Y + 0, Z + 1), Vec3i(X + 0, Y + 1, Z + 1), Vec3i(X + 1, Y + 1, Z + 0));
+  Base[2] = Tetrahedron(Vec3i(X + 0, Y + 0, Z + 1), Vec3i(X + 0, Y + 0, Z + 0), Vec3i(X + 1, Y + 0, Z + 0), Vec3i(X + 1, Y + 1, Z + 0));
+  Base[3] = Tetrahedron(Vec3i(X + 0, Y + 0, Z + 1), Vec3i(X + 0, Y + 1, Z + 1), Vec3i(X + 1, Y + 1, Z + 0), Vec3i(X + 1, Y + 1, Z + 1));
+  Base[4] = Tetrahedron(Vec3i(X + 0, Y + 0, Z + 1), Vec3i(X + 1, Y + 0, Z + 0), Vec3i(X + 1, Y + 1, Z + 0), Vec3i(X + 1, Y + 1, Z + 1));
+  Base[5] = Tetrahedron(Vec3i(X + 0, Y + 0, Z + 1), Vec3i(X + 1, Y + 0, Z + 0), Vec3i(X + 1, Y + 0, Z + 1), Vec3i(X + 1, Y + 1, Z + 1));
   return Base + 6;
 }
