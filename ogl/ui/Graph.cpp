@@ -22,12 +22,12 @@ MetricGraph::MetricGraph(srp::metric::Metric & Metric, float X, float Y, float W
   unsigned int n0 = _num_points;
   unsigned int n1 = _num_points + 1;
   unsigned int n2 = _num_points + 2;
-  unsigned int n3 = _num_points + 3;
 
   for (auto i = _num_points; i < _num_points + _NUM_EXTRA_POINTS; ++i) {
     _verts[i].r = 1;
     _verts[i].g = 1;
     _verts[i].b = 1;
+    _verts[i].a = 1;
   }
   _verts[n0].x = _x + _width;
   _verts[n0].y = _y + _height;
@@ -37,9 +37,6 @@ MetricGraph::MetricGraph(srp::metric::Metric & Metric, float X, float Y, float W
 
   _verts[n2].x = _x;
   _verts[n2].y = _y;
-
-  _verts[n3].x = _x;
-  _verts[n3].y = _y + _height;
 
   _verts[_num_points + _STDDEV_LINE_OFFSET + 0].x = _x;
   _verts[_num_points + _STDDEV_LINE_OFFSET + 1].x = _x + _width;
@@ -75,6 +72,7 @@ void MetricGraph::Render(srp::RenderState & State) const {
     _verts[i].r = 1;
     _verts[i].g = 1;
     _verts[i].b = 1;
+    _verts[i].a = 1;
   }
 
   _verts[_num_points + _STDDEV_LINE_OFFSET + 0].y = _y + GetSampleHeight(long(_metric._average + _metric._stddev));
@@ -97,10 +95,13 @@ void MetricGraph::Render(srp::RenderState & State) const {
     State.SetCurrentShader(cs);
   }
 
+  cs->Upload("transform", trans);
+  cs->Upload("x_min", _x);
+  cs->Upload("x_fade_start", _x + _width * 0.5f);
+
   GLint position = cs->GetAttributeLocation("position");
   GLint color    = cs->GetAttributeLocation("color");
 
-  cs->Upload("transform", trans);
   if (position >= 0) {
     glEnableVertexAttribArray(position);
     glVertexAttribPointer(position, 2, GL_FLOAT, false, sizeof(Vertex), 0);

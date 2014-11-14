@@ -37,10 +37,10 @@ namespace srp {
           // view spec
           float _x, _y, _width, _height;
 
-          // 4 for border stuff and 4 for the stddev lines
-          const unsigned int _NUM_EXTRA_POINTS = 4 + 4;
           // We need 4 points starting at _num_points + this offset to render the standard deviation lines
-          const unsigned int _STDDEV_LINE_OFFSET = 4;
+          const unsigned int _STDDEV_LINE_OFFSET = 3;
+          // 4 for border stuff and 4 for the stddev lines
+          const unsigned int _NUM_EXTRA_POINTS = _STDDEV_LINE_OFFSET + 4;
 
           // need to update the scale factor first
 

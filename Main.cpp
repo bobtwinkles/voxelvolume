@@ -184,6 +184,9 @@ void gl_init() {
   set_texture_data(*dstore, panel_z);
   GLERR();
 
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_BLEND);
+
   srp::ogl::ui::TextInit(*window);
   srp::ogl::ui::UIInit(*window);
 }

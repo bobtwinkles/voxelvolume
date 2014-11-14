@@ -93,6 +93,7 @@ namespace srp {
         void Upload(const char * Name, glm::vec4 vec);
         void Upload(const char * Name, glm::mat4 mat);
         void Upload(const char * Name, GLint sampler);
+        void Upload(const char * Name, GLfloat f);
 
         // Fetch functions
         GLint GetAttributeLocation(const char * Name);

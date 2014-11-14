@@ -204,6 +204,14 @@ void ShaderProgram::Upload(const char * Name, GLint sampler) {
   glUniform1i(loc, sampler);
 }
 
+void ShaderProgram::Upload(const char * Name, GLfloat F) {
+  GLint loc = FindUniform(Name);
+  if (loc < 0) {
+    return;
+  }
+  glUniform1f(loc, F);
+}
+
 GLint ShaderProgram::GetAttributeLocation(const char * Name) {
   GLint tr = glGetAttribLocation(_sid, (const GLchar *) Name);
   if (tr < 0) {
