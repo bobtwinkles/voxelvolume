@@ -1,8 +1,7 @@
 #ifndef _METRIC_H_
 #define _METRIC_H_
 
-#include <time.h>
-
+#include <GL/glew.h>
 #include "Util.hpp"
 
 namespace srp {
@@ -15,7 +14,7 @@ namespace srp {
     class GPUMetric {
       private:
         friend srp::ogl::ui::MetricGraph;
-        struct timespec _start;
+        GLuint _queries[2];
         long * _samples;
         long _min, _max;
         long _seeing_max;
@@ -24,6 +23,7 @@ namespace srp {
         unsigned int _total_samples;
         unsigned int _seeing_max_sample;
         bool _running;
+        bool _finalized;
         float _average, _stddev, _continous_average;
 
         DISALLOW_COPY_AND_ASSIGN(GPUMetric);
@@ -33,6 +33,7 @@ namespace srp {
 
         void Enter();
         void Leave();
+        void Finalize();
 
         void Reset();
 

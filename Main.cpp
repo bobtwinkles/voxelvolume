@@ -282,6 +282,8 @@ void display_func(void) {
   set_texture_data(*dstore, panel_z);
   face->Render(state);
 
+  render_time->Finalize();
+
   snprintf(dispbuf, DISPLAY_BUF_SIZE, "Average: %8.4fns|Standard Deviation: %8.4fns", render_time->GetAverage(), render_time->GetStandardDeviation());
   srp::ogl::ui::TextDrawBegin(state);
 

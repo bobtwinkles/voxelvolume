@@ -11,6 +11,7 @@ GPUMetric::GPUMetric(unsigned int NumSamples) {
   _current_sample = 0;
   _num_samples = NumSamples;
   _running = false;
+  _finalized = true;
   _average = 0;
   _stddev = 0;
   _samples = new long[_num_samples];
@@ -19,6 +20,8 @@ GPUMetric::GPUMetric(unsigned int NumSamples) {
   }
   _total_samples = 0;
   _continous_average = 0;
+
+  glGenQueries(2, _queries);
 }
 
 GPUMetric::~GPUMetric() {
@@ -41,23 +44,48 @@ void GPUMetric::Reset() {
 }
 
 void GPUMetric::Enter() {
+  if (!_finalized) {
+    std::cerr << "Tried to start a metric without finalizing it!" << std::endl;
+    BUG();
+  }
   if (_running) {
     std::cerr << "Tried to start an already running metric!" << std::endl;
     BUG();
   }
-  clock_gettime(CLOCK_REALTIME, &_start);
+  glQueryCounter(_queries[0], GL_TIMESTAMP);
   _running = true;
 }
 
 void GPUMetric::Leave() {
-  struct timespec end;
   if (!_running) {
     std::cerr << "Tried to leave a metric that isn't running!" << std::endl;
     BUG();
   }
-  clock_gettime(CLOCK_REALTIME, &end);
+  glQueryCounter(_queries[1], GL_TIMESTAMP);
+  _running = false;
+  _finalized = false;
+}
 
-  long elapsed = (1000000000 * (end.tv_sec - _start.tv_sec)) + (end.tv_nsec - _start.tv_nsec);
+void GPUMetric::Finalize() {
+  if (_finalized) {
+    std::cerr << "Tried to finalize twice!" << std::endl;
+    BUG();
+  }
+  if (_running) {
+    std::cerr << "Tried to finalize running timer!" << std::endl;
+    BUG();
+  }
+  long start, end, elapsed;
+  GLint availible;
+
+  do {
+    glGetQueryObjectiv(_queries[1], GL_QUERY_RESULT_AVAILABLE, &availible);
+  } while (!availible);
+
+  glGetQueryObjecti64v(_queries[0], GL_QUERY_RESULT, &start);
+  glGetQueryObjecti64v(_queries[1], GL_QUERY_RESULT, &end);
+
+  elapsed = end - start;
   _current_sample = (_current_sample + 1) % _num_samples;
   _samples[_current_sample] = elapsed;
 
@@ -104,7 +132,7 @@ void GPUMetric::Leave() {
     _max = long(0.99 * (_max - _seeing_max) + _seeing_max);
   }
 
-  _running = false;
+  _finalized = true;
 }
 
 float GPUMetric::GetStandardDeviation() const {
