@@ -20,9 +20,9 @@ include_directories(SYSTEM ${FREETYPE_INCLUDE_DIR_freetype2} ${GLM_INCLUDE_DIR} 
 
 set (SRCS Main.cpp
           DataStore.cpp
+          RenderCube.cpp
           RenderChunk.cpp
           RenderConfig.cpp
-          Tetrahedron.cpp
           Util.cpp
           XWindow.cpp
           metric/GPUMetric.cpp

@@ -3,7 +3,7 @@
 
 #include "DataStore.hpp"
 #include "RenderConfig.hpp"
-#include "Tetrahedron.hpp"
+#include "RenderTypes.hpp"
 #include "Util.hpp"
 #include "ogl/VertexBuffer.hpp"
 

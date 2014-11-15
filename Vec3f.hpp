@@ -13,6 +13,11 @@ namespace srp {
 
       Vec3(float X, float Y, float Z) : _x(X), _y(Y), _z(Z) {
       }
+      Vec3(const Vec3 & Other) {
+        _x = Other._x;
+        _y = Other._y;
+        _z = Other._z;
+      }
       Vec3() {}
 
       inline float GetX() const { return _x; }

@@ -15,7 +15,6 @@
 #include <stdio.h>
 
 #include "DataStore.hpp"
-#include "Tetrahedron.hpp"
 #include "RenderConfig.hpp"
 #include "RenderChunk.hpp"
 #include "Util.hpp"

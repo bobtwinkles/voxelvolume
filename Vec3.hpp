@@ -9,9 +9,12 @@ namespace srp {
     double operator() (T t) { return sqrt(t); }
   };
 
+  class DataStore;
+
   template<typename T, typename SqrtRet = double, typename SqrtOp = StdSqrtOp<T> >
   class Vec3 {
     private:
+      friend class DataStore;
       T _x, _y, _z;
     public:
       typedef Vec3<T, SqrtRet, SqrtOp> OwnType;
