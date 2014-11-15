@@ -19,11 +19,6 @@ find_package(Freetype REQUIRED)
 include_directories(SYSTEM ${FREETYPE_INCLUDE_DIR_freetype2} ${GLM_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
 
 set (SRCS Main.cpp
-          DataStore.cpp
-          RenderCube.cpp
-          RenderChunk.cpp
-          RenderConfig.cpp
-          Util.cpp
           XWindow.cpp
           metric/GPUMetric.cpp
           ogl/Shader.cpp
@@ -32,19 +27,27 @@ set (SRCS Main.cpp
           ogl/ui/Graph.cpp
           ogl/ui/Text.cpp
           ogl/ui/UI.cpp
+          render/RenderCube.cpp
+          render/RenderChunk.cpp
+          render/RenderConfig.cpp
+          util/DataStore.cpp
+          util/Util.cpp
           )
 
 add_executable(main ${SRCS})
 target_link_libraries(main ${FREETYPE_LIBRARIES} ${X11_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 
 include_directories("${CMAKE_SOURCE_DIR}/"
+                    "${CMAKE_SOURCE_DIR}/metric"
                     "${CMAKE_SOURCE_DIR}/ogl"
                     "${CMAKE_SOURCE_DIR}/ogl/ui"
-                    "${CMAKE_SOURCE_DIR}/metric")
+                    "${CMAKE_SOURCE_DIR}/render"
+                    "${CMAKE_SOURCE_DIR}/util"
+                   )
 
 if(GLUT_FOUND)
   include_directories(SYSTEM ${GLUT_INCLUDE_DIRS})
-  add_executable(data_render DataRender.cpp DataStore.cpp)
+  add_executable(data_render DataRender.cpp util/DataStore.cpp)
   target_link_libraries(data_render ${GLUT_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 endif(GLUT_FOUND)
 
