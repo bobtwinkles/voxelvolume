@@ -92,15 +92,16 @@ int main(int argc, char ** argv) {
   verts = new std::vector<srp::ogl::Vertex>();
 
   srp::StartGeometryGenerator(dstore);
+  srp::RequestChunk(0, 0, 0, state.GetThreshold());
 
-  for (auto x = 0; x < x_chunks; ++x) {
-    for (auto y = 0; y < y_chunks; ++y) {
-      for (auto z = 0; z < z_chunks; ++z) {
-        printf("Building chunk: %2d %2d %2d\n", x, y, z);
-        srp::RenderChunk(*dstore, x, y, z, state.GetThreshold(), *cache, *indicies, *verts);
-      }
-    }
-  }
+//  for (auto x = 0; x < x_chunks; ++x) {
+//    for (auto y = 0; y < y_chunks; ++y) {
+//      for (auto z = 0; z < z_chunks; ++z) {
+//        printf("Building chunk: %2d %2d %2d\n", x, y, z);
+//        srp::RenderChunk(*dstore, x, y, z, state.GetThreshold(), *cache, *indicies, *verts);
+//      }
+//    }
+//  }
 
   rendered_data = new srp::ogl::VertexBuffer(GL_TRIANGLES, GL_STATIC_DRAW);
   rendered_data->ReplaceData(*verts, *indicies);
