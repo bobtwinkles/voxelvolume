@@ -19,6 +19,7 @@ find_package(Freetype REQUIRED)
 include_directories(SYSTEM ${FREETYPE_INCLUDE_DIR_freetype2} ${GLM_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
 
 set (SRCS Main.cpp
+          GeometryGenerator.cpp
           XWindow.cpp
           metric/GPUMetric.cpp
           ogl/Shader.cpp

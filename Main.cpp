@@ -17,6 +17,7 @@
 #include "DataStore.hpp"
 #include "RenderConfig.hpp"
 #include "RenderChunk.hpp"
+#include "GeometryGenerator.hpp"
 #include "Util.hpp"
 #include "metric/GPUMetric.hpp"
 #include "ogl/OGLUtil.hpp"
@@ -35,10 +36,15 @@ srp::XWindow * window;
 srp::ogl::ShaderProgram * basic;
 srp::ogl::ShaderProgram * textured;
 srp::ogl::VertexBuffer * axis;
-srp::ogl::VertexBuffer * rendered_data;
 srp::ogl::TexturedVertexBuffer * face;
 srp::metric::GPUMetric * render_time;
 srp::ogl::ui::MetricGraph * render_time_graph;
+
+// The important bits
+srp::IndexCache * cache = new srp::IndexCache();
+std::vector<GLuint> * indicies = new std::vector<GLuint>();
+std::vector<srp::ogl::Vertex> * verts = new std::vector<srp::ogl::Vertex>();
+srp::ogl::VertexBuffer * rendered_data;
 
 int frame;
 int panel_z;
@@ -81,9 +87,11 @@ int main(int argc, char ** argv) {
   y_chunks = 1 + dstore->GetHeight() / RENDER_CHUNK_SIZE;
   z_chunks = 1 + dstore->GetDepth() / RENDER_CHUNK_SIZE;
 
-  srp::IndexCache * cache = new srp::IndexCache();
-  std::vector<GLuint> * indicies = new std::vector<GLuint>();
-  std::vector<srp::ogl::Vertex> * verts = new std::vector<srp::ogl::Vertex>();
+  cache = new srp::IndexCache();
+  indicies = new std::vector<GLuint>();
+  verts = new std::vector<srp::ogl::Vertex>();
+
+  srp::StartGeometryGenerator(dstore);
 
   for (auto x = 0; x < x_chunks; ++x) {
     for (auto y = 0; y < y_chunks; ++y) {
@@ -98,16 +106,16 @@ int main(int argc, char ** argv) {
   rendered_data->ReplaceData(*verts, *indicies);
   rendered_data->Sync();
 
-  delete cache;
-  delete indicies;
-  delete verts;
-
   std::cout << "main loop" << std::endl;
 
   running = true;
   main_loop();
 
   std::cout << "cleaning up" << std::endl;
+
+  delete cache;
+  delete indicies;
+  delete verts;
 
   delete dstore;
   delete window;
