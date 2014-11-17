@@ -1,9 +1,11 @@
 #include "GeometryGenerator.hpp"
 
 #include <arpa/inet.h>
-#include <sys/types.h>
+#include <signal.h>
+#include <sys/prctl.h>
 #include <sys/socket.h>
 #include <sys/select.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -40,6 +42,7 @@ int srp::StartGeometryGenerator(srp::DataStore * DS) {
   }
   if (f == 0) {
     close(parent_sock);
+    prctl(PR_SET_PDEATHSIG, SIGHUP);
     DoWork(DS);
     return -1;
   } else {
