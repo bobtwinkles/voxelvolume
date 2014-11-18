@@ -70,7 +70,7 @@ void srp::RequestChunk(int X, int Y, int Z, int Threshould) {
   data[1] = htonl(Y);
   data[2] = htonl(Z);
   data[3] = htonl(Threshould);
-  std::cout << "Requesting chunk: " << X << " " <<  Y << " " << Z << " at threshold " << Threshould << std::endl;
+  //std::cout << "Requesting chunk: " << X << " " <<  Y << " " << Z << " at threshold " << Threshould << std::endl;
   xwrite(parent_sock, data, 4 * sizeof(int));
 }
 
@@ -112,7 +112,7 @@ static void DoWork(srp::DataStore * dstore) {
 
   std::cout << "Starting geometry request loop" << std::endl;
   while (true) {
-    std::cout << "Watiing for data" << std::endl;
+    //std::cout << "Watiing for data" << std::endl;
     err = select(worker_sock + 1, &watch, NULL, NULL, NULL);
     if (err < 0) {
       if (errno != EAGAIN) {
@@ -127,8 +127,14 @@ static void DoWork(srp::DataStore * dstore) {
       input[i] = ntohl(input[i]);
     }
 
-    std::cout << "[SLV] Got request for chunk " << input[0] << " " << input[1]
-                                         << " " << input[2] << " at th " << input[3] << std::endl;
+    //std::cout << "[SLV] Got request for chunk " << input[0] << " " << input[1]
+    //                                     << " " << input[2] << " at th " << input[3] << std::endl;
+
+    if (input[0] == 0 && input[1] == 0 && input[2] == 0) {
+      verts.clear();
+      indicies.clear();
+      cache.clear();
+    }
 
     verts_start = verts.size();
     index_start = indicies.size();

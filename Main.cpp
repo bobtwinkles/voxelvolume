@@ -69,7 +69,8 @@ void display_func(void);
 void reshape_window(void);
 void resize(int w, int h);
 void main_loop(void);
-void poll_geometry(void);
+static void poll_geometry(void);
+static void modify_threshold(int delta);
 glm::mat4 set_camera_pos_and_dir(const srp::Vec3f & Pos, const srp::Vec3f & Dir);
 static void set_texture_data(srp::DataStore & ds, int Z);
 
@@ -132,6 +133,8 @@ void process_events() {
       key = window->KeySymFromKeyCode(xev.xkey.keycode);
       switch (key) {
         case 'c': render_time->Reset(); break;
+        case 'a': modify_threshold(-500); break;
+        case 'q': modify_threshold(+500); break;
         default: break;
       }
       break;
@@ -179,7 +182,29 @@ void main_loop() {
   }
 }
 
-void poll_geometry(void) {
+static void modify_threshold(int delta) {
+  unsigned int curr = state.GetThreshold();
+  if (current_z != z_chunks) {
+    std::cout << "cannot change isovalue, still rendering the last one!" << std::endl;
+    return;
+  }
+  if (delta < 0) {
+    if (curr < -delta) {
+      state.SetThreshold(0);
+    } else {
+      state.SetThreshold(curr + delta);
+    }
+  } else {
+    state.SetThreshold(curr + delta);
+  }
+  std::cout << "Changed threshold to " << std::dec << state.GetThreshold() << std::endl;
+  current_x = current_y = current_z = 0;
+  verts->clear();
+  indicies->clear();
+  srp::RequestChunk(0, 0, 0, state.GetThreshold());
+}
+
+static void poll_geometry(void) {
   if (current_z == z_chunks) { return; } // We've already rendered everything
   if (srp::ReadGeometry(*indicies, *verts)) {
     current_x += 1;
@@ -191,7 +216,11 @@ void poll_geometry(void) {
       current_y = 0;
       current_z += 1;
     }
-    srp::RequestChunk(current_x, current_y, current_z, state.GetThreshold());
+    if (current_z != z_chunks) {
+      srp::RequestChunk(current_x, current_y, current_z, state.GetThreshold());
+    } else {
+      std::cout << "finished rendering" << std::endl;
+    }
     rendered_data->ReplaceData(*verts, *indicies);
     rendered_data->Sync();
   }
