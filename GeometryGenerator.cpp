@@ -70,8 +70,7 @@ void srp::RequestChunk(int X, int Y, int Z, int Threshould) {
   data[1] = htonl(Y);
   data[2] = htonl(Z);
   data[3] = htonl(Threshould);
-  std::cout << "Requesting chunk: " << X << " " <<  Y << " " << Z << std::endl;
-  std::cout << "asdf:" << sizeof(int) << std::endl;
+  std::cout << "Requesting chunk: " << X << " " <<  Y << " " << Z << " at threshold " << Threshould << std::endl;
   xwrite(parent_sock, data, 4 * sizeof(int));
 }
 
@@ -114,7 +113,7 @@ static void DoWork(srp::DataStore * dstore) {
   std::cout << "Starting geometry request loop" << std::endl;
   while (true) {
     std::cout << "Watiing for data" << std::endl;
-    err = select(2, &watch, NULL, NULL, NULL);
+    err = select(worker_sock + 1, &watch, NULL, NULL, NULL);
     if (err < 0) {
       if (errno != EAGAIN) {
         break;
@@ -122,11 +121,9 @@ static void DoWork(srp::DataStore * dstore) {
         continue;
       }
     }
-    std::cout << "got some data" << std::endl;
-    int amount_read = 0;
     while (!xread(worker_sock, input, sizeof(input)));
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 4; ++i) {
       input[i] = ntohl(input[i]);
     }
 
@@ -150,20 +147,30 @@ static bool xread(int fd, void * data, size_t amount) {
   size_t amount_read = 0;
   int i = read(fd, data, amount);
   char * real_data = (char*)data;
-  if (i < 0 && errno == EAGAIN) {
-    return false;
-  } else {
-    perror("read failed");
-    BUG();
+  //std::cerr << "Reading " << amount << " bytes from " << fd << std::endl;
+  if (i < 0) {
+    if (errno == EAGAIN) {
+      //std::cerr << " [" << fd << "] There was no data availible" << std::endl;
+      return false;
+    } else {
+      perror("read failed");
+      BUG();
+    }
   }
+  //std::cerr << " [" << fd << "] Read " << i << std::endl;
   amount_read += i;
   real_data += i;
   while (amount_read < amount) {
     i = read(fd, real_data, amount - amount_read);
-    if (i < 0 && errno != EAGAIN) {
-      perror("read failed");
-      BUG();
+    if (i < 0) {
+      if (errno == EAGAIN) {
+        continue;
+      } else {
+        perror("read failed");
+        BUG();
+      }
     }
+    //std::cerr << " [" << fd << "] Read " << i << std::endl;
     real_data += i;
     amount_read += i;
   }
@@ -173,15 +180,19 @@ static bool xread(int fd, void * data, size_t amount) {
 static void xwrite(int fd, void * data, size_t amount) {
   size_t amount_left = amount;
   char * real_data = (char*)data;
-  std::cerr << std::dec << "Writing " << amount << " bytes to " << fd << std::endl;
+  //std::cerr << std::dec << "Writing " << amount << " bytes to " << fd << std::endl;
   do {
     int i = write(fd, real_data, amount_left);
-    if (i < 0 && errno != EAGAIN) {
-      perror("write failed");
-      BUG();
+    if (i < 0) {
+      if (errno != EAGAIN) {
+        perror("write failed");
+        BUG();
+      } else {
+        continue;
+      }
     }
     amount_left -= i;
     real_data += i;
-    std::cerr << " [" << fd << "] Wrote " << i << " bytes" << std::endl;
+    //std::cerr << " [" << fd << "] Wrote " << i << " bytes" << std::endl;
   } while (amount_left > 0);
 }

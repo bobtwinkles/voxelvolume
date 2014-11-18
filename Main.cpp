@@ -53,6 +53,10 @@ unsigned int x_chunks;
 unsigned int y_chunks;
 unsigned int z_chunks;
 
+unsigned int current_x;
+unsigned int current_y;
+unsigned int current_z;
+
 int last_width, last_height;
 
 glm::mat4 projection;
@@ -65,6 +69,7 @@ void display_func(void);
 void reshape_window(void);
 void resize(int w, int h);
 void main_loop(void);
+void poll_geometry(void);
 glm::mat4 set_camera_pos_and_dir(const srp::Vec3f & Pos, const srp::Vec3f & Dir);
 static void set_texture_data(srp::DataStore & ds, int Z);
 
@@ -94,14 +99,9 @@ int main(int argc, char ** argv) {
   srp::StartGeometryGenerator(dstore);
   srp::RequestChunk(0, 0, 0, state.GetThreshold());
 
-//  for (auto x = 0; x < x_chunks; ++x) {
-//    for (auto y = 0; y < y_chunks; ++y) {
-//      for (auto z = 0; z < z_chunks; ++z) {
-//        printf("Building chunk: %2d %2d %2d\n", x, y, z);
-//        srp::RenderChunk(*dstore, x, y, z, state.GetThreshold(), *cache, *indicies, *verts);
-//      }
-//    }
-//  }
+  current_x = 0;
+  current_y = 0;
+  current_z = 0;
 
   rendered_data = new srp::ogl::VertexBuffer(GL_TRIANGLES, GL_STATIC_DRAW);
   rendered_data->ReplaceData(*verts, *indicies);
@@ -155,6 +155,7 @@ void main_loop() {
     clock_gettime(CLOCK_MONOTONIC_COARSE, &ptime);
 
     reshape_window();
+    poll_geometry();
     process_events();
     display_func();
 
@@ -175,6 +176,24 @@ void main_loop() {
         break;
       }
     }
+  }
+}
+
+void poll_geometry(void) {
+  if (current_z == z_chunks) { return; } // We've already rendered everything
+  if (srp::ReadGeometry(*indicies, *verts)) {
+    current_x += 1;
+    if (current_x == x_chunks) {
+      current_x = 0;
+      current_y += 1;
+    }
+    if (current_y == y_chunks) {
+      current_y = 0;
+      current_z += 1;
+    }
+    srp::RequestChunk(current_x, current_y, current_z, state.GetThreshold());
+    rendered_data->ReplaceData(*verts, *indicies);
+    rendered_data->Sync();
   }
 }
 
