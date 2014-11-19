@@ -100,7 +100,7 @@ void srp::RenderCube(DataStore & DS
       if (it == Cache.end()) {
         srp::ogl::Vertex v;
         GLuint creation_index = 0;
-        v.x = edges[edge].GetX(); v.y = edges[edge].GetY(); v.z = edges[edge].GetZ();
+        v.x = edges[edge].GetX(); v.y = edges[edge].GetY(); v.z = edges[edge].GetZ(); v.w = 0;
         v.r = v.x / 256.f;
         v.g = v.y / 256.f;
         v.b = v.z / 256.f;

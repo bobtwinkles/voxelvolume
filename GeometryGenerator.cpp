@@ -74,7 +74,7 @@ bool srp::ReadGeometry(std::vector<GLuint> & Indicies, std::vector<srp::ogl::Ver
 
   Verts.resize(verts_start + response.verts_length);
   while (!xread(parent_sock, Verts.data() + verts_start, response.verts_length * sizeof(srp::ogl::Vertex)));
-  Indicies.resize(indicies_start + response.verts_length);
+  Indicies.resize(indicies_start + response.indicies_length);
   while (!xread(parent_sock, Indicies.data() + indicies_start, response.indicies_length * sizeof(GLuint)));
 
   if (response.threshold != Threshold) {
@@ -151,9 +151,10 @@ static void DoWork(srp::DataStore * dstore) {
     response.verts_length = ntohl(response.verts_length);
     response.indicies_length = ntohl(response.indicies_length);
     // Write the data
-    std::cout << "v: " << verts.size() << " " << " s: " << indicies.size() << std::endl;
-    xwrite(worker_sock, verts.data() + response.verts_length, response.verts_length * sizeof(srp::ogl::Vertex));
-    xwrite(worker_sock, indicies.data() + response.indicies_length, response.indicies_length * sizeof(GLuint));
+    std::cout << "v: " << verts_start << " -> " << verts.size() << " "
+              << "s: " << index_start << " -> " << indicies.size() << std::endl;
+    xwrite(worker_sock, verts.data() + verts_start, response.verts_length * sizeof(srp::ogl::Vertex));
+    xwrite(worker_sock, indicies.data() + index_start, response.indicies_length * sizeof(GLuint));
   }
 
   perror("select died somehow");
