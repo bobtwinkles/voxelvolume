@@ -1,6 +1,7 @@
 #include "RenderCube.hpp"
 
 #include "DataStore.hpp"
+#include <limits.h>
 
 static float inverse_lerp_factor(unsigned int A, unsigned int B, unsigned int Val);
 // Point offset specificaton.
@@ -108,7 +109,7 @@ void srp::RenderCube(DataStore & DS
         it = Cache.insert(std::make_pair(edges[edge], creation_index)).first;
         Verts.push_back(v);
       }
-      Indicies.push_back(Cache.find(edges[edge])->second);
+      Indicies.push_back(it->second);
     }
   }
 }

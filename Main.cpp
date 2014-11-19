@@ -31,7 +31,7 @@
 
 srp::DataStore * dstore;
 
-srp::RenderState state(3000);
+srp::RenderState state(2000);
 srp::XWindow * window;
 srp::ogl::ShaderProgram * basic;
 srp::ogl::ShaderProgram * textured;
