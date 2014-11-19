@@ -16,6 +16,7 @@ char TETRAHEDRON_POINTS[8][4] = {{0, 0, 0, 0}
                                 ,{1, 1, 1, 0}};
 
 // Tetrahedrons will be composed as described in this array.
+// this goes from [tetrahedron_id][point_id] -> point
 int TETRAHEDRON_MAP[6][4] = {{0, 2, 3, 6}
                             ,{0, 1, 3, 6}
                             ,{1, 0, 4, 6}
@@ -60,6 +61,7 @@ void srp::RenderCube(DataStore & DS
   unsigned int points[8];
   bool points_pass[8];
   Vec3f edges[6];
+  Vec3f normal[6];
   // Get local copies of the points to keep them in the cache
   for (int i = 0; i < 8; ++i) {
     points[i] = DS.GetPoint(X + TETRAHEDRON_POINTS[i][0],
@@ -91,9 +93,18 @@ void srp::RenderCube(DataStore & DS
         int b = TETRAHEDRON_MAP[tetrahedron][EDGE_MAP[edge][1]];
         float fac = inverse_lerp_factor(points[a], points[b], Threshold);
         float inv_fac = 1 - fac;
-        edges[edge] = Vec3f(X + fac * TETRAHEDRON_POINTS[a][0] + inv_fac * TETRAHEDRON_POINTS[b][0]
-                           ,Y + fac * TETRAHEDRON_POINTS[a][1] + inv_fac * TETRAHEDRON_POINTS[b][1]
-                           ,Z + fac * TETRAHEDRON_POINTS[a][2] + inv_fac * TETRAHEDRON_POINTS[b][2]);
+        int ax = TETRAHEDRON_POINTS[a][0];
+        int ay = TETRAHEDRON_POINTS[a][0];
+        int az = TETRAHEDRON_POINTS[a][0];
+        int bx = TETRAHEDRON_POINTS[b][1];
+        int by = TETRAHEDRON_POINTS[b][1];
+        int bz = TETRAHEDRON_POINTS[b][1];
+        edges[edge] = Vec3f(X + fac * ax + inv_fac * bx
+                           ,Y + fac * ay + inv_fac * by
+                           ,Z + fac * az + inv_fac * bz);
+        //normal[edge] =  DS.GetNormal(X + ax, Y + ay, Z + az);
+        //normal[edge] += DS.GetNormal(X + bx, Y + by, Z + bz);
+        normal[edge] = Vec3f(1, 1, 1);
         edges_seen |= 1 << edge;
       }
 
@@ -101,7 +112,11 @@ void srp::RenderCube(DataStore & DS
       if (it == Cache.end()) {
         srp::ogl::Vertex v;
         GLuint creation_index = 0;
-        v.x = edges[edge].GetX(); v.y = edges[edge].GetY(); v.z = edges[edge].GetZ(); v.w = 0;
+
+        v.x = edges[edge].GetX(); v.y = edges[edge].GetY(); v.z = edges[edge].GetZ(); v.w = 1;
+        v.nx = 1; //normal[edge].GetX();
+        v.ny = 1; //normal[edge].GetY();
+        v.nz = 1; //normal[edge].GetZ();
         v.r = v.x / 256.f;
         v.g = v.y / 256.f;
         v.b = v.z / 256.f;

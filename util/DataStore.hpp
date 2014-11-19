@@ -10,12 +10,14 @@ namespace srp {
   class DataStore {
     private:
       unsigned int * _dstore;
+      srp::Vec3f * _normals;
       unsigned int _width, _height, _depth;
       DISALLOW_COPY_AND_ASSIGN(DataStore);
     public:
       DataStore(std::string Folder);
       ~DataStore();
 
+      srp::Vec3f & GetNormal(int X, int Y, int Z);
       unsigned int GetPoint(int X, int Y, int Z);
       unsigned int GetPoint(Vec3i & Point);
 

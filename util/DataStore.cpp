@@ -37,6 +37,7 @@ DataStore::DataStore(std::string Folder) {
   this->_depth = d;
 
   _dstore = new unsigned int[w * h * d];
+  _normals = new srp::Vec3f[w * h * d];
 
   unsigned int min = 0xFFFFFFFF;
   unsigned int max = 0;
@@ -59,10 +60,42 @@ DataStore::DataStore(std::string Folder) {
     }
   }
   std::cout << "min: " << min << " max: " << max << std::endl;
+  std::cout << "generating gradient" << std::endl;
+  for (auto x = 0; x < _width; ++x) {
+    for (auto y = 0; y < _height; ++y) {
+      for (auto z = 0; z < _depth; ++z) {
+        unsigned int mx = GetPoint(x - 1, y, z);
+        unsigned int px = GetPoint(x + 1, y, z);
+        unsigned int my = GetPoint(x, y - 1, z);
+        unsigned int py = GetPoint(x, y + 1, z);
+        unsigned int mz = GetPoint(x, y, z - 1);
+        unsigned int pz = GetPoint(x, y, z + 1);
+        float dx = (float(px) - float(mx)) / 2;
+        float dy = (float(py) - float(my)) / 2;
+        float dz = (float(pz) - float(mz)) / 2;
+        _normals[x + y * _width + z * _width * _height] = Vec3f(dx, dy, dz);
+      }
+    }
+  }
 }
 
 DataStore::~DataStore() {
   delete[] _dstore;
+}
+
+static srp::Vec3f zero(0, 0, 0);
+
+srp::Vec3f & DataStore::GetNormal(int X, int Y, int Z) {
+  if (X < 0 || X >= this->_width) {
+    return zero;
+  }
+  if (Y < 0 || Y >= this->_height) {
+    return zero;
+  }
+  if (Z < 0 || Z >= this->_depth) {
+    return zero;
+  }
+  return _normals[X + Y * this->_width + Z * this->_width * this->_height];
 }
 
 unsigned int DataStore::GetPoint(int X, int Y, int Z) {

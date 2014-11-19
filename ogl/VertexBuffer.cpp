@@ -89,6 +89,7 @@ void VertexBuffer::Render(srp::RenderState State) const {
   srp::ogl::ShaderProgram * cs = State.GetCurrentShaderProgram();
   GLint pos_index = cs->GetAttributeLocation("position");
   GLint color_index = cs->GetAttributeLocation("color");
+  GLint normal_index = cs->GetAttributeLocation("normal");
 
   if (pos_index >= 0) {
     glEnableVertexAttribArray(pos_index);
@@ -100,7 +101,11 @@ void VertexBuffer::Render(srp::RenderState State) const {
     glVertexAttribPointer    (color_index, 3, GL_FLOAT, false, sizeof(Vertex), OFFSET(4));
     GLERR();
   }
-  GLERR();
+  if (normal_index >= 0) {
+    glEnableVertexAttribArray(normal_index);
+    glVertexAttribPointer    (normal_index, 3, GL_FLOAT, false, sizeof(Vertex), OFFSET(8));
+    GLERR();
+  }
 
   glDrawElements(_mode, _indicies.size(), GL_UNSIGNED_INT, 0);
   GLERR();
@@ -111,6 +116,10 @@ void VertexBuffer::Render(srp::RenderState State) const {
   }
   if (color_index >= 0) {
     glDisableVertexAttribArray(color_index);
+    GLERR();
+  }
+  if (normal_index >= 0) {
+    glDisableVertexAttribArray(normal_index);
     GLERR();
   }
 

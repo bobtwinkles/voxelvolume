@@ -12,8 +12,7 @@ namespace srp {
     struct Vertex {
       float x, y, z, w;
       float r, g, b, a;
-//      float nx, ny, nz;
-//      float u, v;
+      float nx, ny, nz;
     };
 
     class VertexBuffer {
