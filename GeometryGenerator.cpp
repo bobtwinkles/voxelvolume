@@ -11,17 +11,25 @@
 
 #include "RenderChunk.hpp"
 
-typedef struct packet {
-  uint32_t start;
-  uint32_t len;
-} packet_t;
+namespace packet {
+  typedef struct response {
+    uint32_t threshold;
+    uint32_t verts_length;
+    uint32_t indicies_length;
+  } response_t;
+
+  typedef struct request {
+    uint32_t x;
+    uint32_t y;
+    uint32_t z;
+    uint32_t threshold;
+  } request_t;
+}
 
 static int parent_sock;
 static int worker_sock;
 
 static void DoWork(srp::DataStore *);
-template <typename T>
-static void ReadData(packet_t & Get, std::vector<T> & data);
 static bool xread(int fd, void * data, size_t amount);
 static void xwrite(int fd, void * data, size_t amount);
 
@@ -51,53 +59,47 @@ int srp::StartGeometryGenerator(srp::DataStore * DS) {
   }
 }
 
-bool srp::ReadGeometry(std::vector<GLuint> & Indicies, std::vector<srp::ogl::Vertex> & Verts) {
-  packet_t get;
-  if (!xread(parent_sock, &get, sizeof(get))) {
+bool srp::ReadGeometry(std::vector<GLuint> & Indicies, std::vector<srp::ogl::Vertex> & Verts, unsigned int Threshold) {
+  packet::response_t response;
+  if (!xread(parent_sock, &response, sizeof(response))) {
     return false;
   }
-  ReadData(get, Verts);
 
-  while (!xread(parent_sock, &get, sizeof(get)));
-  ReadData(get, Indicies);
+  response.verts_length = ntohl(response.verts_length);
+  response.indicies_length = ntohl(response.indicies_length);
+  response.threshold = ntohl(response.threshold);
+
+  int indicies_start = Indicies.size();
+  int verts_start = Verts.size();
+
+  Verts.resize(verts_start + response.verts_length);
+  while (!xread(parent_sock, Verts.data() + verts_start, response.verts_length * sizeof(srp::ogl::Vertex)));
+  Indicies.resize(indicies_start + response.verts_length);
+  while (!xread(parent_sock, Indicies.data() + indicies_start, response.indicies_length * sizeof(GLuint)));
+
+  if (response.threshold != Threshold) {
+    Verts.resize(verts_start);
+    Indicies.resize(indicies_start);
+    return false;
+  }
+
   return true;
 }
 
 void srp::RequestChunk(int X, int Y, int Z, int Threshould) {
-  int data[4];
+  packet::request_t request;
   int err;
-  data[0] = htonl(X);
-  data[1] = htonl(Y);
-  data[2] = htonl(Z);
-  data[3] = htonl(Threshould);
+  request.x = htonl(X);
+  request.y = htonl(Y);
+  request.z = htonl(Z);
+  request.threshold = htonl(Threshould);
   //std::cout << "Requesting chunk: " << X << " " <<  Y << " " << Z << " at threshold " << Threshould << std::endl;
-  xwrite(parent_sock, data, 4 * sizeof(int));
-}
-
-template <typename T>
-static void SendData(uint32_t start, std::vector<T> & data) {
-  packet_t send;
-  uint32_t send_size = data.size() - start;
-  send.start = start;
-  send.len = send_size;
-  // TODO: error handling
-  xwrite(worker_sock, &send, sizeof(send));
-  xwrite(worker_sock, data.data() + start, send_size * sizeof(T));
-}
-
-template <typename T>
-static void ReadData(packet_t & Get, std::vector<T> & data) {
-  T * gotten;
-  gotten = new T[Get.len];
-
-  while (!xread(parent_sock, gotten, Get.len * sizeof(T)));
-
-  data.insert(data.end(), gotten, gotten + Get.len);
-  delete[] gotten;
+  xwrite(parent_sock, &request, sizeof(request));
 }
 
 static void DoWork(srp::DataStore * dstore) {
-  int input[4];
+  packet::request_t request;
+  packet::response_t response;
   uint32_t index_start;
   uint32_t verts_start;
   srp::IndexCache cache;
@@ -121,16 +123,16 @@ static void DoWork(srp::DataStore * dstore) {
         continue;
       }
     }
-    while (!xread(worker_sock, input, sizeof(input)));
+    while (!xread(worker_sock, &request, sizeof(request)));
 
-    for (int i = 0; i < 4; ++i) {
-      input[i] = ntohl(input[i]);
-    }
-
+    request.x = ntohl(request.x);
+    request.y = ntohl(request.y);
+    request.z = ntohl(request.z);
+    request.threshold = ntohl(request.threshold);
     //std::cout << "[SLV] Got request for chunk " << input[0] << " " << input[1]
     //                                     << " " << input[2] << " at th " << input[3] << std::endl;
 
-    if (input[0] == 0 && input[1] == 0 && input[2] == 0) {
+    if (request.x == 0 && request.y == 0 && request.z == 0) {
       verts.clear();
       indicies.clear();
       cache.clear();
@@ -139,10 +141,19 @@ static void DoWork(srp::DataStore * dstore) {
     verts_start = verts.size();
     index_start = indicies.size();
 
-    srp::RenderChunk(*dstore, input[0], input[1], input[2], input[3], cache, indicies, verts);
+    srp::RenderChunk(*dstore, request.x, request.y, request.z, request.threshold, cache, indicies, verts);
 
-    SendData(verts_start, verts);
-    SendData(index_start, indicies);
+    response.threshold = htonl(request.threshold);
+    response.verts_length     = htonl(verts.size() - verts_start);
+    response.indicies_length  = htonl(indicies.size() - index_start);
+    xwrite(worker_sock, &response, sizeof(response));
+    // Unnetwork it so we can refer to these lengths
+    response.verts_length = ntohl(response.verts_length);
+    response.indicies_length = ntohl(response.indicies_length);
+    // Write the data
+    std::cout << "v: " << verts.size() << " " << " s: " << indicies.size() << std::endl;
+    xwrite(worker_sock, verts.data() + response.verts_length, response.verts_length * sizeof(srp::ogl::Vertex));
+    xwrite(worker_sock, indicies.data() + response.indicies_length, response.indicies_length * sizeof(GLuint));
   }
 
   perror("select died somehow");
@@ -186,7 +197,8 @@ static bool xread(int fd, void * data, size_t amount) {
 static void xwrite(int fd, void * data, size_t amount) {
   size_t amount_left = amount;
   char * real_data = (char*)data;
-  //std::cerr << std::dec << "Writing " << amount << " bytes to " << fd << std::endl;
+  if (amount == 0) { return; } // Nothing to do, there is no data to write
+  std::cerr << std::dec << "Writing " << amount << " bytes to " << fd << std::endl;
   do {
     int i = write(fd, real_data, amount_left);
     if (i < 0) {

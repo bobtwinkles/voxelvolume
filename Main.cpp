@@ -206,7 +206,7 @@ static void modify_threshold(int delta) {
 
 static void poll_geometry(void) {
   if (current_z == z_chunks) { return; } // We've already rendered everything
-  if (srp::ReadGeometry(*indicies, *verts)) {
+  if (srp::ReadGeometry(*indicies, *verts, state.GetThreshold())) {
     current_x += 1;
     if (current_x == x_chunks) {
       current_x = 0;
