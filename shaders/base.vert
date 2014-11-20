@@ -12,6 +12,7 @@ out vec3 Normal;
 
 void main() {
   Color = color;
+  vec4 real_position = vec4(position.xyz, 1);
   gl_Position = projection_matrix * view_matrix * position;
   Position = position.xyz;
   Normal = normal;

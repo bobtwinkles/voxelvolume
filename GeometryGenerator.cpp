@@ -151,8 +151,8 @@ static void DoWork(srp::DataStore * dstore) {
     response.verts_length = ntohl(response.verts_length);
     response.indicies_length = ntohl(response.indicies_length);
     // Write the data
-    std::cout << "v: " << verts_start << " -> " << verts.size() << " "
-              << "s: " << index_start << " -> " << indicies.size() << std::endl;
+    // std::cout << "v: " << verts_start << " -> " << verts.size() << " "
+    //           << "s: " << index_start << " -> " << indicies.size() << std::endl;
     xwrite(worker_sock, verts.data() + verts_start, response.verts_length * sizeof(srp::ogl::Vertex));
     xwrite(worker_sock, indicies.data() + index_start, response.indicies_length * sizeof(GLuint));
   }
@@ -199,7 +199,7 @@ static void xwrite(int fd, void * data, size_t amount) {
   size_t amount_left = amount;
   char * real_data = (char*)data;
   if (amount == 0) { return; } // Nothing to do, there is no data to write
-  std::cerr << std::dec << "Writing " << amount << " bytes to " << fd << std::endl;
+  // std::cerr << std::dec << "Writing " << amount << " bytes to " << fd << std::endl;
   do {
     int i = write(fd, real_data, amount_left);
     if (i < 0) {

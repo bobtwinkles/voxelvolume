@@ -94,17 +94,20 @@ void srp::RenderCube(DataStore & DS
         float fac = inverse_lerp_factor(points[a], points[b], Threshold);
         float inv_fac = 1 - fac;
         int ax = TETRAHEDRON_POINTS[a][0];
-        int ay = TETRAHEDRON_POINTS[a][0];
-        int az = TETRAHEDRON_POINTS[a][0];
-        int bx = TETRAHEDRON_POINTS[b][1];
+        int ay = TETRAHEDRON_POINTS[a][1];
+        int az = TETRAHEDRON_POINTS[a][2];
+        int bx = TETRAHEDRON_POINTS[b][0];
         int by = TETRAHEDRON_POINTS[b][1];
-        int bz = TETRAHEDRON_POINTS[b][1];
+        int bz = TETRAHEDRON_POINTS[b][2];
         edges[edge] = Vec3f(X + fac * ax + inv_fac * bx
                            ,Y + fac * ay + inv_fac * by
                            ,Z + fac * az + inv_fac * bz);
-        //normal[edge] =  DS.GetNormal(X + ax, Y + ay, Z + az);
-        //normal[edge] += DS.GetNormal(X + bx, Y + by, Z + bz);
-        normal[edge] = Vec3f(1, 1, 1);
+        srp::Vec3f na = DS.GetNormal(X + ax, Y + ay, Z + az);
+        srp::Vec3f nb = DS.GetNormal(X + bx, Y + by, Z + bz);
+        normal[edge] = srp::Vec3f(na.GetX() * fac + nb.GetX() * inv_fac
+                                 ,na.GetY() * fac + nb.GetY() * inv_fac
+                                 ,na.GetZ() * fac + nb.GetZ() * inv_fac);
+        normal[edge] /= normal[edge].Magnitude();
         edges_seen |= 1 << edge;
       }
 
@@ -114,12 +117,13 @@ void srp::RenderCube(DataStore & DS
         GLuint creation_index = 0;
 
         v.x = edges[edge].GetX(); v.y = edges[edge].GetY(); v.z = edges[edge].GetZ(); v.w = 1;
-        v.nx = 1; //normal[edge].GetX();
-        v.ny = 1; //normal[edge].GetY();
-        v.nz = 1; //normal[edge].GetZ();
+        v.nx = normal[edge].GetX();
+        v.ny = normal[edge].GetY();
+        v.nz = normal[edge].GetZ();
         v.r = v.x / 256.f;
         v.g = v.y / 256.f;
         v.b = v.z / 256.f;
+        v.a = 1;
         creation_index = Verts.size();
         it = Cache.insert(std::make_pair(edges[edge], creation_index)).first;
         Verts.push_back(v);

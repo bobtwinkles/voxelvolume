@@ -33,7 +33,7 @@ namespace srp {
       }
 
       SqrtRet Magnitude() const {
-        return SqrtOp(this->Magnitude2());
+        return sqrtf(this->Magnitude2());
       }
 
       OwnType & NormalizeSelf() {

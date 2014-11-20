@@ -240,21 +240,29 @@ void gl_init() {
     srp::ogl::Vertex origin;
     origin.x = origin.y = origin.z = 0;
     origin.r = origin.g = origin.b = 1;
+    origin.nx = origin.ny = 0;
+    origin.nz = 1;
 
     srp::ogl::Vertex plus_x;
     plus_x.x = dstore->GetWidth();
     plus_x.y = plus_x.z = 0;
     plus_x.r = plus_x.g = plus_x.b = 1;
+    plus_x.ny = plus_x.nz = 0;
+    plus_x.nx = 1;
 
     srp::ogl::Vertex plus_y;
     plus_y.y = dstore->GetHeight();
     plus_y.x = plus_y.z = 0;
     plus_y.r = plus_y.g = plus_y.b = 1;
+    plus_x.ny = plus_y.nz = 0;
+    plus_y.ny = 1;
 
     srp::ogl::Vertex plus_z;
     plus_z.z = dstore->GetDepth();
     plus_z.x = plus_z.y = 0;
     plus_z.r = plus_z.g = plus_z.b = 1;
+    plus_z.ny = plus_z.nx = 0;
+    plus_z.nz = 1;
 
     srp::ogl::Vertex center;
     center.x = dstore->GetWidth() / 2.f;
