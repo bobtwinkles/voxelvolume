@@ -8,6 +8,8 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <fontconfig/fontconfig.h>
+
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -44,19 +46,56 @@ using namespace srp::ogl::ui;
 #define CACHE_TEXTURE_SIZE 128
 
 void srp::ogl::ui::TextInit(srp::XWindow & Window) {
+  FcResult result;
+  char * file;
   int error;
 
   error = FT_Init_FreeType(&library);
+
+  // Load the default fontconfig configuration
+  if (!FcInit()) {
+    std::cerr << "Failed to initialize fontconfig, cannot find font";
+    BUG();
+  }
+  // We want a 12 point fixed width font
+  FcPattern * pattern = FcPatternCreate(); //FcNameParse((const FcChar8*)":spacing=100:width=80"); //:style=regular:scalable=False");
+  FcPatternAddInteger(pattern, "spacing", FC_MONO);
+  FcPatternAddInteger(pattern, "weight", 80);
+  FcPatternAddInteger(pattern, "slant", 0);
+  FcPatternPrint(pattern);
+
+  FcObjectSet * os = FcObjectSetBuild(FC_FAMILY, FC_STYLE, FC_FILE, (char *) 0);
+
+  FcFontSet * fs = FcFontList(0, pattern, os);
+
+  FcPatternDestroy(pattern);
+  FcObjectSetDestroy(os);
+
+  std::cout << "There are " << fs->nfont << " font matches" << std::endl;
+  //Actually find the font
+  if (fs) {
+    for (int j = 0; j < fs->nfont; ++j) {
+      if (FcPatternGetString(fs->fonts[j], FC_FILE, 0, (FcChar8 **)&file) != FcResultMatch) {
+        file = (char*)"<unknown filename>";
+      }
+      std::cout << file << std::endl;
+    }
+  }
+
+  std::cout << "Will use " << file << " as the font." << std::endl;
 
   if (error) {
     std::cerr << "Failed to initialize freetype, error " << error << std::endl;
     BUG();
   }
 
-  if (FT_New_Face(library, "/usr/share/fonts/dejavu/DejaVuSansMono.ttf", 0, &courier)) {
-    std::cerr << "Failed to open cour.tff" << std::endl;
+  if (FT_New_Face(library, (const char *)file, 0, &courier)) {
+    std::cerr << "Failed to open " << file << std::endl;
     BUG();
   }
+
+  // Destroy the font set after we're done with the file name
+  FcFontSetDestroy(fs);
 
   // 12 pt. at 72 dpi
   FT_Set_Char_Size(courier, 12 * 64, 0, 72, 72);

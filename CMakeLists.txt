@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.0)
+cmake_minimum_required(VERSION 3.0)
 
 project(srp)
 
@@ -15,8 +15,9 @@ find_package(OpenGL REQUIRED)
 find_package(X11 REQUIRED)
 find_package(GLM REQUIRED)
 find_package(Freetype REQUIRED)
+find_package(Fontconfig REQUIRED)
 
-include_directories(SYSTEM ${FREETYPE_INCLUDE_DIR_freetype2} ${GLM_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
+include_directories(SYSTEM ${FONTCONFIG_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIR_freetype2} ${GLM_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
 
 set (SRCS Main.cpp
           GeometryGenerator.cpp
@@ -36,7 +37,7 @@ set (SRCS Main.cpp
           )
 
 add_executable(main ${SRCS})
-target_link_libraries(main ${FREETYPE_LIBRARIES} ${X11_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
+target_link_libraries(main ${FONTCONFIG_LIBRARIES} ${FREETYPE_LIBRARIES} ${X11_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 
 include_directories("${CMAKE_SOURCE_DIR}/"
                     "${CMAKE_SOURCE_DIR}/metric"
