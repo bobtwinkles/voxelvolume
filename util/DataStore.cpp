@@ -89,7 +89,7 @@ DataStore::DataStore(const srp::DataStore & Root, const unsigned int LOD) : _roo
     BUG();
   }
   std::cout << "Creating DataStore view at " <<_lod << " from " << Root.GetLOD() << std::endl;
-  int lod_scale = _lod - Root.GetLOD();
+  int lod_scale = 1 << (_lod - Root.GetLOD());
   _width = Root.GetWidth() / lod_scale;
   _height = Root.GetHeight() / lod_scale;
   _depth = Root.GetDepth() / lod_scale;

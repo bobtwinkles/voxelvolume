@@ -99,9 +99,13 @@ void srp::RenderCube(DataStore & DS
         int bx = TETRAHEDRON_POINTS[b][0];
         int by = TETRAHEDRON_POINTS[b][1];
         int bz = TETRAHEDRON_POINTS[b][2];
-        edges[edge] = Vec3f(X + fac * ax + inv_fac * bx
-                           ,Y + fac * ay + inv_fac * by
-                           ,Z + fac * az + inv_fac * bz);
+        unsigned int lod = 1 << DS.GetLOD();
+        if (lod == 0) {
+          lod = 1;
+        }
+        edges[edge] = Vec3f(lod * (X + fac * ax + inv_fac * bx)
+                           ,lod * (Y + fac * ay + inv_fac * by)
+                           ,lod * (Z + fac * az + inv_fac * bz));
         srp::Vec3f na = DS.GetNormal(X + ax, Y + ay, Z + az);
         srp::Vec3f nb = DS.GetNormal(X + bx, Y + by, Z + bz);
         normal[edge] = srp::Vec3f(na.GetX() * fac + nb.GetX() * inv_fac

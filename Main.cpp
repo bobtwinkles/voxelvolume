@@ -84,7 +84,7 @@ int main(int argc, char ** argv) {
   srp::InitializeBaseDirectory(argv[0]);
 
   root = new srp::DataStore(argv[1]);
-  dstore = new srp::DataStore(*root, 4);
+  dstore = new srp::DataStore(*root, 1);
   window = new srp::XWindow("SRP");
   render_time = new srp::metric::GPUMetric(128);
   render_time_graph = new srp::ogl::ui::MetricGraph(*render_time, 2, 16, 512, 100);
@@ -121,6 +121,7 @@ int main(int argc, char ** argv) {
   delete indicies;
   delete verts;
 
+  delete root;
   delete dstore;
   delete window;
 }
@@ -246,29 +247,29 @@ void gl_init() {
     origin.nz = 1;
 
     srp::ogl::Vertex plus_x;
-    plus_x.x = dstore->GetWidth();
+    plus_x.x = root->GetWidth();
     plus_x.y = plus_x.z = 0;
     plus_x.r = plus_x.g = plus_x.b = 1;
     plus_x.ny = plus_x.nz = 0;
     plus_x.nx = 1;
 
     srp::ogl::Vertex plus_y;
-    plus_y.y = dstore->GetHeight();
+    plus_y.y = root->GetHeight();
     plus_y.x = plus_y.z = 0;
     plus_y.r = plus_y.g = plus_y.b = 1;
     plus_x.ny = plus_y.nz = 0;
     plus_y.ny = 1;
 
     srp::ogl::Vertex plus_z;
-    plus_z.z = dstore->GetDepth();
+    plus_z.z = root->GetDepth();
     plus_z.x = plus_z.y = 0;
     plus_z.r = plus_z.g = plus_z.b = 1;
     plus_z.ny = plus_z.nx = 0;
     plus_z.nz = 1;
 
     srp::ogl::Vertex center;
-    center.x = dstore->GetWidth() / 2.f;
-    center.z = dstore->GetDepth() / 2.f;
+    center.x = root->GetWidth() / 2.f;
+    center.z = root->GetDepth() / 2.f;
     center.y = 0;
     center.r = center.g = 1;
     center.b = 0;
@@ -280,7 +281,7 @@ void gl_init() {
     axis->AddVertex(origin);
     axis->AddVertex(plus_z);
     axis->AddVertex(center);
-    center.y = dstore->GetHeight();
+    center.y = root->GetHeight();
     axis->AddVertex(center);
     axis->Sync();
   }
@@ -288,7 +289,7 @@ void gl_init() {
   {
     face = new srp::ogl::TexturedVertexBuffer(GL_TRIANGLES, GL_STATIC_DRAW);
     srp::ogl::QueueTexturedRectangle(*face, glm::vec3(0, 0, 0),
-                                            glm::vec3(dstore->GetWidth(), dstore->GetHeight(), 0),
+                                            glm::vec3(root->GetWidth(), root->GetHeight(), 0),
                                             glm::vec2(0, 0),
                                             glm::vec2(1, 1));
     face->Sync();
@@ -309,14 +310,14 @@ void gl_init() {
 void display_func(void) {
   char dispbuf[DISPLAY_BUF_SIZE];
   frame += 1;
-  panel_z = 0.5 * ( sin(frame / float(100)) + 1)  * dstore->GetDepth();
+  panel_z = 0.5 * ( sin(frame / float(100)) + 1)  * root->GetDepth();
 
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
   GLERR();
 
   glm::mat4 real_view;
   real_view = glm::rotate(view, frame * 3.1415926f / 180.f, glm::vec3(0, 1, 0));
-  real_view = glm::translate(real_view, glm::vec3(-(dstore->GetWidth() / 2.f), 0, -(dstore->GetDepth() / 2.f)));
+  real_view = glm::translate(real_view, glm::vec3(-(root->GetWidth() / 2.f), 0, -(root->GetDepth() / 2.f)));
 
   basic->Bind();
   GLERR();
@@ -345,7 +346,7 @@ void display_func(void) {
   textured->Upload("view_matrix", translated);
   GLERR();
 
-  set_texture_data(*dstore, panel_z);
+  set_texture_data(*root, panel_z);
   face->Render(state);
 
   render_time->Finalize();
