@@ -28,7 +28,7 @@ struct char_spec {
 };
 
 static FT_Library library;
-static FT_Face courier;
+static FT_Face freetype_font;
 static srp::ogl::ShaderProgram * text_shader;
 static srp::ogl::ShaderProgram * save;
 // TODO: refactor this out into UI.cpp, for now it's duplicated
@@ -52,6 +52,11 @@ void srp::ogl::ui::TextInit(srp::XWindow & Window) {
 
   error = FT_Init_FreeType(&library);
 
+  if (error) {
+    std::cerr << "Failed to initialize freetype, error " << error << std::endl;
+    BUG();
+  }
+
   // Load the default fontconfig configuration
   if (!FcInit()) {
     std::cerr << "Failed to initialize fontconfig, cannot find font";
@@ -73,24 +78,28 @@ void srp::ogl::ui::TextInit(srp::XWindow & Window) {
 
   std::cout << "There are " << fs->nfont << " font matches" << std::endl;
   //Actually find the font
+  bool font_found = false;
   if (fs) {
     for (int j = 0; j < fs->nfont; ++j) {
       if (FcPatternGetString(fs->fonts[j], FC_FILE, 0, (FcChar8 **)&file) != FcResultMatch) {
         file = (char*)"<unknown filename>";
+      } else {
+        std::cout << "checking " << file << std::endl;
+        if (FT_New_Face(library, (const char *)file, 0, &freetype_font)) {
+          std::cerr << "Failed to open " << file << std::endl;
+        } else {
+          if (freetype_font->num_glyphs > 100) {
+            std::cout << "Will use " << file << " as the font." << std::endl;
+            font_found = true;
+            break;
+          }
+        }
       }
-      std::cout << file << std::endl;
     }
   }
 
-  std::cout << "Will use " << file << " as the font." << std::endl;
-
-  if (error) {
-    std::cerr << "Failed to initialize freetype, error " << error << std::endl;
-    BUG();
-  }
-
-  if (FT_New_Face(library, (const char *)file, 0, &courier)) {
-    std::cerr << "Failed to open " << file << std::endl;
+  if (!font_found) {
+    std::cerr << "Failed to find a font" << std::endl;
     BUG();
   }
 
@@ -98,9 +107,9 @@ void srp::ogl::ui::TextInit(srp::XWindow & Window) {
   FcFontSetDestroy(fs);
 
   // 12 pt. at 72 dpi
-  FT_Set_Char_Size(courier, 12 * 64, 0, 72, 72);
+  FT_Set_Char_Size(freetype_font, 12 * 64, 0, 72, 72);
 
-  std::cout << "We have " << courier->num_glyphs << " glyphs avalible" << std::endl;
+  std::cout << "We have " << freetype_font->num_glyphs << " glyphs avalible" << std::endl;
 
   window = &Window;
 
@@ -119,13 +128,13 @@ void srp::ogl::ui::TextInit(srp::XWindow & Window) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  FT_GlyphSlot g = courier->glyph;
+  FT_GlyphSlot g = freetype_font->glyph;
   int cx, cy;
   cx = cy = 0;
   int max_height = 0;
   unsigned char * buffer = new unsigned char [CACHE_TEXTURE_SIZE * CACHE_TEXTURE_SIZE];
   for (char i = 20; i < 126; ++i) {
-    if (FT_Load_Char(courier, i, FT_LOAD_RENDER)) {
+    if (FT_Load_Char(freetype_font, i, FT_LOAD_RENDER)) {
       std::cerr << "WARNING: Failed to load character " << i << std::endl;
       continue;
     }
@@ -193,7 +202,7 @@ void srp::ogl::ui::TextDrawString(int X, int Y, const char * String) {
   glm::mat4 trans;
   const char * p;
   unsigned int w, h;
-  FT_GlyphSlot g = courier->glyph;
+  FT_GlyphSlot g = freetype_font->glyph;
 
   if (!rendering) {
     std::cerr << "tried to draw text outside of text rending mode!" << std::endl
