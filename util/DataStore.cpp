@@ -12,6 +12,8 @@ using srp::DataStore;
 
 DataStore::DataStore(std::string Folder) {
   int w, h, d;
+  _lod = 0;
+  _root = NULL;
   std::string fname(Folder + "/meta.txt");
   std::string filenames;
   std::string files_base;
@@ -79,13 +81,52 @@ DataStore::DataStore(std::string Folder) {
   }
 }
 
+DataStore::DataStore(const srp::DataStore & Root, const unsigned int LOD) : _root(&Root), _lod(LOD) {
+  if (_lod <= Root.GetLOD()) {
+    std::cerr << "Tried to construct viewing DataStore out of a DataStore with less information!" << std::endl;
+    std::cerr << "Requested LOD: " << _lod << std::endl;
+    std::cerr << "Provided LOD:  " << Root.GetLOD() << std::endl;
+    BUG();
+  }
+  std::cout << "Creating DataStore view at " <<_lod << " from " << Root.GetLOD() << std::endl;
+  int lod_scale = _lod - Root.GetLOD();
+  _width = Root.GetWidth() / lod_scale;
+  _height = Root.GetHeight() / lod_scale;
+  _depth = Root.GetDepth() / lod_scale;
+  _dstore = new unsigned int[_width * _height * _depth];
+  _normals = new srp::Vec3f[_width * _height * _depth];
+  std::cout << "science: " << lod_scale << std::endl;
+  for (auto z = 0; z < _depth; ++z) {
+    for (auto y = 0; y < _height; ++y) {
+      for (auto x = 0; x < _width; ++x) {
+        int idx = x + y * _width + z * _width * _height;
+        srp::Vec3f avg_norm;
+        unsigned long avg_valu;
+        for (auto zz = z * lod_scale; zz < (z + 1) * lod_scale; ++zz) {
+          for (auto yy = y * lod_scale; yy < (y + 1) * lod_scale; ++yy) {
+            for (auto xx = x * lod_scale; xx < (x + 1) * lod_scale; ++xx) {
+              avg_valu += Root.GetPoint(xx, yy, zz);
+              avg_norm += Root.GetNormal(xx, yy, zz);
+            }
+          }
+        }
+        avg_valu /= lod_scale * lod_scale * lod_scale;
+        avg_norm /= lod_scale * lod_scale * lod_scale;
+        _dstore[idx]  = avg_valu;
+        _normals[idx] = avg_norm;
+      }
+    }
+  }
+}
+
 DataStore::~DataStore() {
   delete[] _dstore;
+  delete[] _normals;
 }
 
 static srp::Vec3f zero(0, 0, 0);
 
-srp::Vec3f & DataStore::GetNormal(int X, int Y, int Z) {
+srp::Vec3f & DataStore::GetNormal(int X, int Y, int Z) const {
   if (X < 0 || X >= this->_width) {
     return zero;
   }
@@ -98,7 +139,7 @@ srp::Vec3f & DataStore::GetNormal(int X, int Y, int Z) {
   return _normals[X + Y * this->_width + Z * this->_width * this->_height];
 }
 
-unsigned int DataStore::GetPoint(int X, int Y, int Z) {
+unsigned int DataStore::GetPoint(int X, int Y, int Z) const {
   if (X < 0 || X >= this->_width) {
     return 0;
   }
@@ -111,6 +152,6 @@ unsigned int DataStore::GetPoint(int X, int Y, int Z) {
   return _dstore[X + Y * this->_width + Z * this->_width * this->_height];
 }
 
-unsigned int DataStore::GetPoint(srp::Vec3<int> & Point) {
+unsigned int DataStore::GetPoint(srp::Vec3<int> & Point) const {
   return this->GetPoint(Point.GetX(), Point.GetY(), Point.GetZ());
 }

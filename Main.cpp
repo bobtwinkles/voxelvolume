@@ -29,6 +29,7 @@
 #include "Vec3.hpp"
 #include "XWindow.hpp"
 
+srp::DataStore * root;
 srp::DataStore * dstore;
 
 srp::RenderState state(2000);
@@ -82,7 +83,8 @@ int main(int argc, char ** argv) {
 
   srp::InitializeBaseDirectory(argv[0]);
 
-  dstore = new srp::DataStore(argv[1]);
+  root = new srp::DataStore(argv[1]);
+  dstore = new srp::DataStore(*root, 4);
   window = new srp::XWindow("SRP");
   render_time = new srp::metric::GPUMetric(128);
   render_time_graph = new srp::ogl::ui::MetricGraph(*render_time, 2, 16, 512, 100);

@@ -107,6 +107,8 @@ static void DoWork(srp::DataStore * dstore) {
   std::vector<GLuint> indicies;
   fd_set watch;
 
+  std::cout << "Configured geometry generator to generate at " << dstore->GetLOD() << std::endl;
+
   FD_ZERO(&watch);
   FD_SET(worker_sock, &watch);
 
