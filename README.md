@@ -24,3 +24,23 @@ Volume data should be 16 bit binary data, of size `width * height` in files name
     basename.n
 
 where `basename` is the basename specifed in the metadata file, and n goes from 1 to the depth (inclusive) specified in `meta.txt`
+
+Compiling
+---------
+You must have:
+  - CMake
+  - fontconfig (if you have X, you probably have this)
+  - freetype2 (if you have X, you probably have this)
+  - GLEW
+  - GLM
+
+if you want to build the basic renderer (which just continually scrolls through the dataset, not particularly interesting) you also need GLUT.
+To build, create a directory somewhere outside of the source tree and then
+
+    cmake path/to/source
+    make
+
+and to run
+
+    cd bin/
+    ./main path/to/data/folder
