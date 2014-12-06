@@ -34,7 +34,10 @@ You must have:
   - GLEW
   - GLM
 
+The code may build under Cygwin or OSX, but this code wasn't written with an eye to portability and thus likely only works on Linux.
+
 if you want to build the basic renderer (which just continually scrolls through the dataset, not particularly interesting) you also need GLUT.
+
 To build, create a directory somewhere outside of the source tree and then
 
     cmake path/to/source
